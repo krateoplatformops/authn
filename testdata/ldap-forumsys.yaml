@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: forumsys
+  namespace: demo-system
+stringData:
+  password: password
+---
+apiVersion: ldap.authn.krateo.io/v1alpha1
+kind: LDAPConfig
+metadata:
+  name: forumsys
+spec:
+  dialURL: ldap://ldap.forumsys.com:389
+  baseDN: dc=example,dc=com
+  bindDN: cn=read-only-admin,dc=example,dc=com
+  bindSecret:
+    name: forumsys
+    namespace: demo-system
+    key: password

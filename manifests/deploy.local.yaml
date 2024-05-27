@@ -1,0 +1,58 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-system
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: krateo-authn
+  namespace: demo-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authn
+spec:
+  selector:
+    app: authn
+  type: NodePort
+  ports:
+  - name: http
+    port: 8082
+    targetPort: http
+    protocol: TCP
+    nodePort: 30082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: krateo-authn
+  namespace: demo-system
+  labels:
+    app: authn
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: authn
+  template:
+    metadata:
+      labels:
+        app: authn
+    spec:
+      serviceAccountName: krateo-authn
+      containers:
+      - name: krateo-authn
+        image: kind.local/authn:latest
+        imagePullPolicy: Never
+        args:
+          - --debug=true
+          - --kubeconfig-server-url=https://127.0.0.1:57456
+          - --store-namespace=demo-system
+        ports:
+        - name: http
+          containerPort: 8082

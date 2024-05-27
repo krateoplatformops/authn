@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openldap
+  namespace: demo-system
+stringData:
+  password: GoodNewsEveryone
+---
+apiVersion: ldap.authn.krateo.io/v1alpha1
+kind: LDAPConfig
+metadata:
+  name: openldap
+spec:
+  dialURL: ldap://localhost:10389
+  baseDN: ou=people,dc=planetexpress,dc=com
+  bindDN: cn=admin,dc=planetexpress,dc=com
+  bindSecret:
+    name: openldap
+    namespace: demo-system
+    key: password
+

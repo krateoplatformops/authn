@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/basic-auth
+metadata:
+  name: cyberjoker-password
+  namespace: demo-system
+stringData:
+  password: "123456"
+---
+apiVersion: basic.authn.krateo.io/v1alpha1
+kind: User
+metadata:
+  name: cyberjoker
+  namespace: demo-system
+spec:
+  displayName: Cyber Joker
+  avatarURL: https://i.pravatar.cc/256?img=70
+  groups:
+    - devs
+  passwordRef:
+    namespace: demo-system
+    name: cyberjoker-password
+    key: password
+---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/basic-auth
+metadata:
+  name: pixelprincess-password
+  namespace: demo-system
+stringData:
+  password: "123456"
+---
+apiVersion: basic.authn.krateo.io/v1alpha1
+kind: User
+metadata:
+  name: pixelprincess
+  namespace: demo-system
+spec:
+  displayName: Pixel Princess
+  avatarURL: https://i.pravatar.cc/256?img=19
+  groups:
+    - devs
+  passwordRef:
+    namespace: demo-system
+    name: pixelprincess-password
+    key: password

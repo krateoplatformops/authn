@@ -1,0 +1,12 @@
+#!/bin/bash
+
+kind get kubeconfig >/dev/null 2>&1 || \
+    cat <<EOF | kind create cluster --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30082
+    hostPort: 30082
+EOF
