@@ -9,11 +9,12 @@ export AUTHN_DUMP_ENV=true
 export AUTHN_PORT=8181
 export AUTHN_KUBECONFIG_CACRT=$CA_DATA
 export AUTHN_KUBECONFIG_CLUSTER_NAME=$CLUSTER
-export AUTHN_KUBERNETES_URL=$SERVER
+export AUTHN_KUBECONFIG_SERVER_URL=$SERVER
 export AUTHN_STORE_NAMESPACE=demo-system
 
 kubectl apply -f crds/
 kubectl apply -f testdata/ns.yaml
 kubectl apply -f testdata/basic.yaml
+
 
 go run main.go -kubeconfig ${HOME}/.kube/config

@@ -9,4 +9,6 @@ nodes:
   extraPortMappings:
   - containerPort: 30082
     hostPort: 30082
+    listenAddress: "127.0.0.1"
+    protocol: TCP
 EOF
