@@ -7,11 +7,12 @@ import (
 
 type GithubConfigSpec struct {
 	authnoauth2.ConfigSpec `json:",inline"`
+	ApiUrl                 string `json:"apiUrl,omitempty"`
 	Organization           string `json:"organization"`
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster,categories={krateo,authn,github}
+// +kubebuilder:resource:scope=Namespaced,categories={krateo,authn,github}
 
 // GithubConfig is a AuthN Service Oauth2 configuration.
 type GithubConfig struct {

@@ -67,7 +67,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		oc, org, err := getConfig(r.rc, name)
+		oc, org, apiUrl, err := getConfig(r.rc, name)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to fetch oauth2 configuration")
 			encode.Error(wri, http.StatusExpectationFailed, err)
@@ -82,7 +82,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		user, err := r.validate(tok, org)
+		user, err := r.validate(tok, org, apiUrl)
 		if err != nil {
 			log.Err(err).Msg("unable to fetch user info from github")
 			encode.Error(wri, http.StatusInternalServerError, err)
@@ -104,8 +104,8 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 	}
 }
 
-func (r *loginRoute) validate(tok *oauth2.Token, org string) (userinfo.Info, error) {
-	cli := newGithubApiClient(tok, org)
+func (r *loginRoute) validate(tok *oauth2.Token, org, apiUrl string) (userinfo.Info, error) {
+	cli := newGithubApiClient(tok, org, apiUrl)
 
 	user, err := cli.getUserInfo()
 	if err != nil {

@@ -30,7 +30,7 @@ type LDAPConfigSpec struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster,categories={krateo,authn,ldap}
+// +kubebuilder:resource:scope=Namespaced,categories={krateo,authn,ldap}
 
 // LDAPConfig is a AuthN Service LDAP configuration.
 type LDAPConfig struct {
