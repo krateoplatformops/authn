@@ -20,7 +20,7 @@ type UserSpec struct {
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Cluster,categories={krateo,authn,user}
+// +kubebuilder:resource:scope=Namespaced,categories={krateo,authn,user}
 
 // User is a AuthN Service user configuration.
 type User struct {

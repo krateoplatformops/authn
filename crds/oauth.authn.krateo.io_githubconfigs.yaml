@@ -16,7 +16,7 @@ spec:
     listKind: GithubConfigList
     plural: githubconfigs
     singular: githubconfig
-  scope: Cluster
+  scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
@@ -42,6 +42,8 @@ spec:
             type: object
           spec:
             properties:
+              apiUrl:
+                type: string
               authStyle:
                 default: 0
                 description: |-
