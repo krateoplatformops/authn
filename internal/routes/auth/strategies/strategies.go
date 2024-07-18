@@ -3,8 +3,10 @@ package strategies
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/krateoplatformops/authn/internal/helpers/kube/resolvers"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/routes"
 	authbasic "github.com/krateoplatformops/authn/internal/routes/auth/basic"
 	authgithub "github.com/krateoplatformops/authn/internal/routes/auth/github"
@@ -45,7 +47,9 @@ func (r *strategiesRoute) Method() string {
 
 func (r *strategiesRoute) Handler() http.HandlerFunc {
 	return func(wri http.ResponseWriter, req *http.Request) {
-		log := zerolog.Ctx(req.Context()).With().Logger()
+		log := zerolog.Ctx(req.Context()).With().
+			Str("namespace", os.Getenv(util.NamespaceEnvVar)).
+			Logger()
 
 		list := []strategy{}
 

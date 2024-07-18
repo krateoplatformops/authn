@@ -2,14 +2,21 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 
 	basicv1alpha1 "github.com/krateoplatformops/authn/apis/authn/basic/v1alpha1"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/client"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 )
 
 func UserList(rc *rest.Config) ([]*basicv1alpha1.UserSpec, error) {
+	ns, err := util.GetOperatorNamespace()
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve service namespace: %w", err)
+	}
+
 	cli, err := client.New(rc, schema.GroupVersion{
 		Group:   basicv1alpha1.Group,
 		Version: basicv1alpha1.Version,
@@ -19,7 +26,10 @@ func UserList(rc *rest.Config) ([]*basicv1alpha1.UserSpec, error) {
 	}
 
 	res := &basicv1alpha1.UserList{}
-	err = cli.Get().Resource("users").Do(context.Background()).Into(res)
+	err = cli.Get().Resource("users").
+		Namespace(ns).
+		Do(context.Background()).
+		Into(res)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +45,11 @@ func UserList(rc *rest.Config) ([]*basicv1alpha1.UserSpec, error) {
 }
 
 func UserGet(rc *rest.Config, name string) (*basicv1alpha1.User, error) {
+	ns, err := util.GetOperatorNamespace()
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve service namespace: %w", err)
+	}
+
 	cli, err := client.New(rc, schema.GroupVersion{
 		Group:   basicv1alpha1.Group,
 		Version: basicv1alpha1.Version,
@@ -44,7 +59,8 @@ func UserGet(rc *rest.Config, name string) (*basicv1alpha1.User, error) {
 	}
 
 	res := &basicv1alpha1.User{}
-	err = cli.Get().Resource("users").Name(name).
+	err = cli.Get().Resource("users").
+		Namespace(ns).Name(name).
 		Do(context.Background()).Into(res)
 	return res, err
 }

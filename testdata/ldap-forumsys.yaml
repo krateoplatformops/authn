@@ -16,6 +16,7 @@ apiVersion: ldap.authn.krateo.io/v1alpha1
 kind: LDAPConfig
 metadata:
   name: forumsys
+  namespace: demo-system
 spec:
   dialURL: ldap://ldap.forumsys.com:389
   baseDN: dc=example,dc=com

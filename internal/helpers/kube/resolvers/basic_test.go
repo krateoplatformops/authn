@@ -6,11 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 func TestUserGet(t *testing.T) {
+	os.Setenv(util.NamespaceEnvVar, "demo-system")
+
 	rc, err := newRestConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -27,6 +30,8 @@ func TestUserGet(t *testing.T) {
 }
 
 func TestUserList(t *testing.T) {
+	os.Setenv(util.NamespaceEnvVar, "demo-system")
+
 	rc, err := newRestConfig()
 	if err != nil {
 		t.Fatal(err)

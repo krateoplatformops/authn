@@ -7,7 +7,7 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: openldap
+  name: local
   namespace: demo-system
 stringData:
   password: GoodNewsEveryone
@@ -15,7 +15,8 @@ stringData:
 apiVersion: ldap.authn.krateo.io/v1alpha1
 kind: LDAPConfig
 metadata:
-  name: openldap
+  name: local
+  namespace: demo-system
 spec:
   dialURL: ldap://localhost:10389
   baseDN: ou=people,dc=planetexpress,dc=com

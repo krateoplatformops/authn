@@ -19,8 +19,8 @@ func TestGetSecret(t *testing.T) {
 	}
 
 	ref := core.SecretKeySelector{
-		Namespace: "krateo-system",
-		Name:      "ldap-example",
+		Namespace: "demo-system",
+		Name:      "local",
 		Key:       "password",
 	}
 	pwd, err := Get(context.TODO(), rc, &ref)
