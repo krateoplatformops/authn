@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/helpers/userinfo"
 	"github.com/krateoplatformops/authn/internal/routes"
 	"github.com/krateoplatformops/authn/internal/shortid"
@@ -49,7 +51,9 @@ func (r *loginRoute) Method() string {
 
 func (r *loginRoute) Handler() http.HandlerFunc {
 	return func(wri http.ResponseWriter, req *http.Request) {
-		log := zerolog.Ctx(req.Context()).With().Logger()
+		log := zerolog.Ctx(req.Context()).With().
+			Str("namespace", os.Getenv(util.NamespaceEnvVar)).
+			Logger()
 
 		name := req.URL.Query().Get("name")
 		if len(name) == 0 {

@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/resolvers"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/secrets"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/helpers/userinfo"
 	"github.com/krateoplatformops/authn/internal/routes"
 	"github.com/krateoplatformops/authn/internal/shortid"
@@ -55,7 +57,9 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		log := zerolog.Ctx(req.Context()).With().Logger()
+		log := zerolog.Ctx(req.Context()).With().
+			Str("namespace", os.Getenv(util.NamespaceEnvVar)).
+			Logger()
 
 		user, err := r.validate(username, password)
 		if err != nil {

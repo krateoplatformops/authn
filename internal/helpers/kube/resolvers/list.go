@@ -2,9 +2,11 @@ package resolvers
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/krateoplatformops/authn/apis/authn/oauth2/github/v1alpha1"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"golang.org/x/oauth2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,13 +51,20 @@ func ListGithubConfigs(dyn dynamic.Interface) ([]*ConfigSpec, error) {
 }
 
 func listOauth2Config(dyn dynamic.Interface, resource string) ([]*ConfigSpec, error) {
+	ns, err := util.GetOperatorNamespace()
+	if err != nil {
+		return nil, fmt.Errorf("unable to resolve service namespace: %w", err)
+	}
+
 	gvr := schema.GroupVersionResource{
 		Group:    "oauth.authn.krateo.io",
 		Version:  "v1alpha1",
 		Resource: resource,
 	}
 
-	all, err := dyn.Resource(gvr).List(context.TODO(), metav1.ListOptions{})
+	all, err := dyn.Resource(gvr).
+		Namespace(ns).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
@@ -71,24 +80,6 @@ func listOauth2Config(dyn dynamic.Interface, resource string) ([]*ConfigSpec, er
 			log.Printf("error converting unstructured: (kind: %s, name: %s)\n", x.GetKind(), x.GetName())
 			continue
 		}
-
-		// clientID, _, err := unstructured.NestedString(x.Object, "spec", "clientID")
-		// if err != nil {
-		// 	log.Printf("error fetching clientID for resource: (kind: %s, name: %s)\n", x.GetKind(), x.GetName())
-		// 	continue
-		// }
-
-		// authURL, _, err := unstructured.NestedString(x.Object, "spec", "authURL")
-		// if err != nil {
-		// 	log.Printf("error fetching authURL for resource: (kind: %s, name: %s)\n", x.GetKind(), x.GetName())
-		// 	continue
-		// }
-
-		// redirectURL, _, err := unstructured.NestedString(x.Object, "spec", "redirectURL")
-		// if err != nil {
-		// 	log.Printf("error fetching redirectURL for resource: (kind: %s, name: %s)\n", x.GetKind(), x.GetName())
-		// 	continue
-		// }
 
 		oc := oauth2.Config{
 			ClientID:    el.Spec.ClientID,

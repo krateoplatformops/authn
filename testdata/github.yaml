@@ -3,6 +3,7 @@ apiVersion: oauth.authn.krateo.io/v1alpha1
 kind: GithubConfig
 metadata:
   name: github-example
+  namespace: demo-system
 spec:
   organization: krateoplatformops
   clientID: "e3d6f6f1506a1f891266"

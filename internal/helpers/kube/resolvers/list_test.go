@@ -2,12 +2,16 @@ package resolvers
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"k8s.io/client-go/dynamic"
 )
 
 func TestListGithubConfigs(t *testing.T) {
+	os.Setenv(util.NamespaceEnvVar, "demo-system")
+
 	rc, err := newRestConfig()
 	if err != nil {
 		t.Fatal(err)

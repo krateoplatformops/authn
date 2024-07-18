@@ -50,8 +50,8 @@ func main() {
 		env.String("AUTHN_KUBECONFIG_CLUSTER_NAME", "krateo"), "cluster name for generated kubeconfig")
 	kubernetesURL := flag.String("kubeconfig-server-url",
 		env.String("AUTHN_KUBECONFIG_SERVER_URL", ""), "kubernetes api server url for generated kubeconfig")
-	storageNamespace := flag.String("store-namespace",
-		env.String("AUTHN_STORE_NAMESPACE", ""), "namespace where to store secrets with generated config")
+	storageNamespace := flag.String("namespace",
+		env.String("AUTHN_NAMESPACE", ""), "namespace where to store secrets with generated config")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")

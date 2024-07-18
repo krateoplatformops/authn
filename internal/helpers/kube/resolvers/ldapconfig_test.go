@@ -2,16 +2,21 @@ package resolvers
 
 import (
 	"fmt"
+	"os"
 	"testing"
+
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 )
 
 func TestLDAPConfigGet(t *testing.T) {
+	os.Setenv(util.NamespaceEnvVar, "demo-system")
+
 	rc, err := newRestConfig()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res, err := LDAPConfigGet(rc, "ldap-local")
+	res, err := LDAPConfigGet(rc, "local")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,6 +26,8 @@ func TestLDAPConfigGet(t *testing.T) {
 }
 
 func TestLDAPConfigList(t *testing.T) {
+	os.Setenv(util.NamespaceEnvVar, "demo-system")
+
 	rc, err := newRestConfig()
 	if err != nil {
 		t.Fatal(err)

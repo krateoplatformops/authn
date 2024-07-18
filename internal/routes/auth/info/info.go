@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/config/storage"
+	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/routes"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
@@ -42,7 +44,9 @@ func (r *infoRoute) Method() string {
 
 func (r *infoRoute) Handler() http.HandlerFunc {
 	return func(wri http.ResponseWriter, req *http.Request) {
-		log := zerolog.Ctx(req.Context()).With().Logger()
+		log := zerolog.Ctx(req.Context()).With().
+			Str("namespace", os.Getenv(util.NamespaceEnvVar)).
+			Logger()
 
 		qs := req.URL.Query()
 		name := qs.Get("name")
