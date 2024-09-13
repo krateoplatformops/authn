@@ -19,7 +19,6 @@ jobs:
           git fetch origin main:main
 
       - name: Fetch all commits for the PR
-        id: fetch-commits
         run: |
           # Check out the PR branch and compare commits against main
           commits=$(git log main..HEAD --pretty=format:"%s")
@@ -63,13 +62,6 @@ jobs:
             LABELS+=("test")
           fi
 
-          # Convert the labels array to a JSON string with proper formatting
-          LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s . | tr -d '\n')
-          echo "Labels to add: $LABELS_JSON"
-
-          # Safely export labels as an environment variable
-          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_ENV
-
           # Convert the labels array to a JSON string
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
           echo "Labels to add: $LABELS_JSON"
@@ -77,7 +69,7 @@ jobs:
           # Safely export labels as an environment variable without extra spaces or newlines
           echo "LABELS_JSON=${LABELS_JSON}" >> $GITHUB_ENV
 
-     - name: Add labels to PR using REST API
+      - name: Add labels to PR using REST API
         if: env.LABELS_JSON != '[]'
         run: |
           # Ensure LABELS_JSON is correctly passed as a JSON array
