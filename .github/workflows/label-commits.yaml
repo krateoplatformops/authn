@@ -19,6 +19,7 @@ jobs:
           git fetch origin main:main
 
       - name: Fetch all commits for the PR
+        id: fetch-commits
         run: |
           # Check out the PR branch and compare commits against main
           commits=$(git log main..HEAD --pretty=format:"%s")
@@ -66,14 +67,10 @@ jobs:
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
           echo "Labels to add: $LABELS_JSON"
 
-          # Safely export labels as an environment variable
-          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_OUTPUT
-          echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
-
       - name: Add labels to PR using REST API
         run: |
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
             -H "Content-Type: application/json" \
-            --data "{\"labels\": $LABELS_JSON}" \
+            --data "{\"labels\": ${{ steps.fetch-commits.outputs.LABELS_JSON}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels"
