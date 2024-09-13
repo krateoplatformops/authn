@@ -69,7 +69,6 @@ jobs:
           echo "LABELS=$LABELS" >> $GITHUB_ENV
 
       - name: Add label to PR
-        if: env.LABEL != 'none'
         uses: actions-ecosystem/action-add-labels@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
