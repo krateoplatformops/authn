@@ -1,0 +1,70 @@
+name: Label PR Based on Commit Messages
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  label_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Analyze commits
+        id: analyze
+        run: |
+          # Fetch all commits associated with the pull request
+          commits=$(git log origin/main..HEAD --pretty=format:"%s")
+          echo "Commits: $commits"
+
+          # Initialize labels
+          LABELS=""
+
+          # Check commit messages and set labels
+          if [[ "$commits" =~ feat ]]; then
+            LABELS="$LABELS,feature"
+          fi
+          if [[ "$commits" =~ fix ]]; then
+            LABELS="$LABELS,bug"
+          fi
+          if [[ "$commits" =~ chore ]]; then
+            LABELS="$LABELS,chore"
+          fi
+          if [[ "$commits" =~ build ]]; then
+            LABELS="$LABELS,build"
+          fi
+          if [[ "$commits" =~ ci ]]; then
+            LABELS="$LABELS,ci"
+          fi
+          if [[ "$commits" =~ docs ]]; then
+            LABELS="$LABELS,docs"
+          fi
+          if [[ "$commits" =~ perf ]]; then
+            LABELS="$LABELS,perf"
+          fi
+          if [[ "$commits" =~ refactor ]]; then
+            LABELS="$LABELS,refactor"
+          fi
+          if [[ "$commits" =~ revert ]]; then
+            LABELS="$LABELS,revert"
+          fi
+          if [[ "$commits" =~ style ]]; then
+            LABELS="$LABELS,style"
+          fi
+          if [[ "$commits" =~ test ]]; then
+            LABELS="$LABELS,test"
+          fi
+
+          # Remove leading comma
+          LABELS=$(echo $LABELS | sed 's/^,//')
+
+          # Export labels as an environment variable
+          echo "LABELS=$LABELS" >> $GITHUB_ENV
+
+      - name: Add label to PR
+        if: env.LABEL != 'none'
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: ${{ env.LABEL }}
