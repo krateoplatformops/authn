@@ -10,49 +10,63 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Get PR commits
-        id: get_commits
-        uses: actions/github-script@v6
         with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const { data: commits } = await github.pulls.listCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
+          fetch-depth: 0  # Fetch all history for all branches and tags
 
-            // Extract commit messages
-            const commitMessages = commits.map(commit => commit.commit.message);
-            core.setOutput('messages', commitMessages.join('\n'));
-
-      - name: Analyze commits and set labels
-        id: analyze
+      - name: Fetch main branch
         run: |
-          commits="${{ steps.get_commits.outputs.messages }}"
+          # Fetch the main branch to ensure it is available for comparison
+          git fetch origin main:main
+
+      - name: Fetch all commits for the PR
+        run: |
+          # Check out the PR branch and compare commits against main
+          commits=$(git log main..HEAD --pretty=format:"%s")
           echo "Commits: $commits"
 
-          # Initialize labels as an array
-          LABELS=()
+          # Initialize labels
+          LABELS=""
 
           # Check commit messages and set labels
           if [[ "$commits" =~ feat ]]; then
-            LABELS+=("enhancement")
+            LABELS="$LABELS,enhancement"
           fi
           if [[ "$commits" =~ fix ]]; then
-            LABELS+=("bug")
+            LABELS="$LABELS,bug"
+          fi
+          if [[ "$commits" =~ chore ]]; then
+            LABELS="$LABELS,chore"
+          fi
+          if [[ "$commits" =~ build ]]; then
+            LABELS="$LABELS,build"
+          fi
+          if [[ "$commits" =~ ci ]]; then
+            LABELS="$LABELS,ci"
           fi
           if [[ "$commits" =~ docs ]]; then
-            LABELS+=("documentation")
+            LABELS="$LABELS,documentation"
+          fi
+          if [[ "$commits" =~ perf ]]; then
+            LABELS="$LABELS,perf"
+          fi
+          if [[ "$commits" =~ refactor ]]; then
+            LABELS="$LABELS,refactor"
+          fi
+          if [[ "$commits" =~ revert ]]; then
+            LABELS="$LABELS,revert"
+          fi
+          if [[ "$commits" =~ style ]]; then
+            LABELS="$LABELS,style"
+          fi
+          if [[ "$commits" =~ test ]]; then
+            LABELS="$LABELS,test"
           fi
 
-          # Convert the labels array to a comma-separated string
-          LABELS_STRING=$(IFS=, ; echo "${LABELS[*]}")
-          echo "Labels to add: $LABELS_STRING"
+          # Remove leading comma
+          LABELS=$(echo $LABELS | sed 's/^,//')
 
           # Export labels as an environment variable
-          echo "LABELS=$LABELS_STRING" >> $GITHUB_ENV
+          echo "LABELS=$LABELS" >> $GITHUB_ENV
 
       - name: Add labels to PR using REST API
         if: env.LABELS != ''
