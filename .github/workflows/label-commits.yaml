@@ -67,8 +67,8 @@ jobs:
           echo "Labels to add: $LABELS_JSON"
 
           # Safely export labels as an environment variable
-          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_ENV
-
+          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_OUTPUT
+          echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
 
       - name: Add labels to PR using REST API
         run: |
