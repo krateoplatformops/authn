@@ -65,11 +65,11 @@ jobs:
 
           # Convert the labels array to a JSON string with proper formatting
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
-          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_OUTPUT
+          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_ENV
 
       - name: Add labels to PR using REST API
         run: |
-          echo "Labels to add: ${{ steps.fetch-commits.outputs.LABELS_JSON }}"
+          echo "Labels to add: $LABELS_JSON"
 
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
