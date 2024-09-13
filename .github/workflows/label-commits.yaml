@@ -72,7 +72,7 @@ jobs:
         if: env.LABELS != ''
         run: |
           curl -s -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
             -H "Content-Type: application/json" \
             --data "{\"labels\": [${{ toJson(env.LABELS) }}]}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels"
