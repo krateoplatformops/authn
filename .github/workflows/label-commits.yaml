@@ -69,6 +69,8 @@ jobs:
 
       - name: Add labels to PR using REST API
         run: |
+          echo "Labels to add: ${{ steps.fetch-commits.outputs.LABELS_JSON }}"
+
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
             -H "Content-Type: application/json" \
