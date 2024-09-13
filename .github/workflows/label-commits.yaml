@@ -29,7 +29,7 @@ jobs:
 
           # Check commit messages and set labels
           if [[ "$commits" =~ feat ]]; then
-            LABELS="$LABELS,feature"
+            LABELS="$LABELS,enhancement"
           fi
           if [[ "$commits" =~ fix ]]; then
             LABELS="$LABELS,bug"
@@ -44,7 +44,7 @@ jobs:
             LABELS="$LABELS,ci"
           fi
           if [[ "$commits" =~ docs ]]; then
-            LABELS="$LABELS,docs"
+            LABELS="$LABELS,documentation"
           fi
           if [[ "$commits" =~ perf ]]; then
             LABELS="$LABELS,perf"
