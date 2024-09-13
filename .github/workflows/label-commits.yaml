@@ -72,5 +72,5 @@ jobs:
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
             -H "Content-Type: application/json" \
-            --data "{\"labels\": ${{ steps.fetch-commits.outputs.LABELS_JSON}" \
+            --data "{\"labels\": ${{ steps.fetch-commits.outputs.LABELS_JSON }}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels"
