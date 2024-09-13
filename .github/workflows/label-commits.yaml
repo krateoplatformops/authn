@@ -62,19 +62,18 @@ jobs:
             LABELS+=("test")
           fi
 
-          # Convert the labels array to a JSON string
+          # Convert the labels array to a JSON string with proper formatting
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
           echo "Labels to add: $LABELS_JSON"
 
-          # Export labels as an environment variable
-          echo "LABELS=$LABELS_JSON" >> $GITHUB_ENV
+          # Safely export labels as an environment variable
+          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_ENV
 
 
       - name: Add labels to PR using REST API
-        if: env.LABELS != '[]'
         run: |
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.ADD_LABEL_ON_PULL_REQUEST }}" \
             -H "Content-Type: application/json" \
-            --data "{\"labels\": $LABELS}" \
+            --data "{\"labels\": $LABELS_JSON}" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels"
