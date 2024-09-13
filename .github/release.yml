@@ -14,6 +14,3 @@ changelog:
     - title: Documentation 📚
       labels:
         - docs
-    - title: Other Changes
-      labels:
-        - "*"

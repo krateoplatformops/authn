@@ -24,49 +24,50 @@ jobs:
           commits=$(git log main..HEAD --pretty=format:"%s")
           echo "Commits: $commits"
 
-          # Initialize labels
-          LABELS=""
+          # Initialize labels as an array
+          LABELS=()
 
           # Check commit messages and set labels
           if [[ "$commits" =~ feat ]]; then
-            LABELS="$LABELS,enhancement"
+            LABELS+=("enhancement")
           fi
           if [[ "$commits" =~ fix ]]; then
-            LABELS="$LABELS,bug"
+            LABELS+=("bug")
           fi
           if [[ "$commits" =~ chore ]]; then
-            LABELS="$LABELS,chore"
+            LABELS+=("chore")
           fi
           if [[ "$commits" =~ build ]]; then
-            LABELS="$LABELS,build"
+            LABELS+=("build")
           fi
           if [[ "$commits" =~ ci ]]; then
-            LABELS="$LABELS,ci"
+            LABELS+=("ci")
           fi
           if [[ "$commits" =~ docs ]]; then
-            LABELS="$LABELS,documentation"
+            LABELS+=("documentation")
           fi
           if [[ "$commits" =~ perf ]]; then
-            LABELS="$LABELS,perf"
+            LABELS+=("perf")
           fi
           if [[ "$commits" =~ refactor ]]; then
-            LABELS="$LABELS,refactor"
+            LABELS+=("refactor")
           fi
           if [[ "$commits" =~ revert ]]; then
-            LABELS="$LABELS,revert"
+            LABELS+=("revert")
           fi
           if [[ "$commits" =~ style ]]; then
-            LABELS="$LABELS,style"
+            LABELS+=("style")
           fi
           if [[ "$commits" =~ test ]]; then
-            LABELS="$LABELS,test"
+            LABELS+=("test")
           fi
 
-          # Remove leading comma
-          LABELS=$(echo $LABELS | sed 's/^,//')
+          # Convert the labels array to a comma-separated string
+          LABELS_STRING=$(IFS=, ; echo "${LABELS[*]}")
+          echo "Labels to add: $LABELS_STRING"
 
           # Export labels as an environment variable
-          echo "LABELS=$LABELS" >> $GITHUB_ENV
+          echo "LABELS=$LABELS_STRING" >> $GITHUB_ENV
 
       - name: Add labels to PR using REST API
         if: env.LABELS != ''
