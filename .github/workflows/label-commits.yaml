@@ -64,7 +64,7 @@ jobs:
           fi
 
           # Convert the labels array to a JSON string with proper formatting
-          LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
+          LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s . | tr -d '\n')
           echo "Labels to add: $LABELS_JSON"
 
           # Safely export labels as an environment variable
