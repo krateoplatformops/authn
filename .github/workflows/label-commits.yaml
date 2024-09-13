@@ -62,12 +62,13 @@ jobs:
             LABELS+=("test")
           fi
 
-          # Convert the labels array to a JSON string
+          # Convert the labels array to a properly formatted JSON array string
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
           echo "Labels to add: $LABELS_JSON"
 
-          # Safely export labels as an environment variable without extra spaces or newlines
-          echo "LABELS_JSON=${LABELS_JSON}" >> $GITHUB_ENV
+          # Trim any spaces/newlines and safely export the JSON array
+          LABELS_JSON=$(echo $LABELS_JSON | tr -d '\n' | tr -d ' ')
+          echo "LABELS_JSON=$LABELS_JSON" >> $GITHUB_ENV
 
       - name: Add labels to PR using REST API
         if: env.LABELS_JSON != '[]'
