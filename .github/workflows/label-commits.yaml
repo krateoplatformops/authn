@@ -10,12 +10,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags
 
-      - name: Analyze commits
-        id: analyze
+      - name: Fetch main branch
         run: |
-          # Fetch all commits associated with the pull request
-          commits=$(git log origin/main..HEAD --pretty=format:"%s")
+          # Fetch the main branch to ensure it is available for comparison
+          git fetch origin main:main
+
+      - name: Fetch all commits for the PR
+        run: |
+          # Check out the PR branch and compare commits against main
+          commits=$(git log main..HEAD --pretty=format:"%s")
           echo "Commits: $commits"
 
           # Initialize labels
