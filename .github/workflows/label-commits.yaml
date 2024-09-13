@@ -64,10 +64,10 @@ jobs:
 
           # Convert the labels array to a JSON string
           LABELS_JSON=$(printf '%s\n' "${LABELS[@]}" | jq -R . | jq -s .)
-          echo "Labels to add: $LABELS_STRING"
+          echo "Labels to add: $LABELS_JSON"
 
           # Export labels as an environment variable
-          echo "LABELS=$LABELS_STRING" >> $GITHUB_ENV
+          echo "LABELS=$LABELS_JSON" >> $GITHUB_ENV
 
 
       - name: Add labels to PR using REST API
