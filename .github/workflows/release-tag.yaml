@@ -1,4 +1,4 @@
-name: release
+name: release-tag
 
 on:
   push:
@@ -106,12 +106,12 @@ jobs:
 
   merge:
     runs-on: buildjet-2vcpu-ubuntu-2204
-    permissions:
-      packages: write
-      contents: read
     needs:
       - package-amd64
       - package-arm64
+    permissions:
+      packages: write
+      contents: read
     steps:
       - name: Download digests
         uses: actions/download-artifact@v3
@@ -144,3 +144,9 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.version }}
+  update-crd-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update CRD doc
+        run: |
+          curl -s https://doc.crds.dev/github.com/${{ github.repository_owner }}/{{ github.repository }}@${{  github.ref_name }}
