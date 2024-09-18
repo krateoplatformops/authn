@@ -11,6 +11,7 @@ import (
 	authbasic "github.com/krateoplatformops/authn/internal/routes/auth/basic"
 	authgithub "github.com/krateoplatformops/authn/internal/routes/auth/github"
 	authldap "github.com/krateoplatformops/authn/internal/routes/auth/ldap"
+	authoidc "github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/dynamic"
@@ -61,7 +62,14 @@ func (r *strategiesRoute) Handler() http.HandlerFunc {
 			}
 		}
 
-		all, err := r.forLDAP()
+		all, err := r.forOIDC()
+		if err == nil {
+			list = append(list, all...)
+		} else {
+			log.Err(err).Msg("unable to get oidc auth strategies")
+		}
+
+		all, err = r.forLDAP()
 		if err == nil {
 			list = append(list, all...)
 		} else {
@@ -93,6 +101,27 @@ func (r *strategiesRoute) countBasicAuthUsers() (int, error) {
 	}
 
 	return len(all), nil
+}
+
+func (r *strategiesRoute) forOIDC() ([]strategy, error) {
+	all, err := resolvers.OIDCConfigList(r.rc)
+	if err != nil {
+		return []strategy{}, err
+	}
+
+	if len(all.Items) == 0 {
+		return []strategy{}, nil
+	}
+
+	res := make([]strategy, len(all.Items))
+	for i, x := range all.Items {
+		res[i] = strategy{
+			Kind: "oidc",
+			Path: authoidc.Path,
+			Name: x.Name,
+		}
+	}
+	return res, nil
 }
 
 func (r *strategiesRoute) forLDAP() ([]strategy, error) {

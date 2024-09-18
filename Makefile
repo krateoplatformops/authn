@@ -55,10 +55,12 @@ kind-down: ## Shuts down the KinD cluster.
 .PHONY: demo
 demo: ## Starts demo.
 	$(KUBECTL) apply -f crds/
-	$(KUBECTL) apply -f testdata/basic-example.yaml
-	$(KUBECTL) apply -f testdata/github-example.yaml
+	$(KUBECTL) apply -f testdata/ns.yaml
+	$(KUBECTL) apply -f testdata/basic.yaml
+	$(KUBECTL) apply -f testdata/github.yaml
 	$(KUBECTL) apply -f testdata/ldap-local.yaml
 	$(KUBECTL) apply -f testdata/ldap-forumsys.yaml
+	$(KUBECTL) apply -f testdata/oidc-azure.yaml
 	$(KUBECTL) create secret generic github \
 		--from-literal=clientSecret=$(CLIENT_SECRET) \
 		--namespace krateo-system || true
