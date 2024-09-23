@@ -20,6 +20,7 @@ import (
 	"github.com/krateoplatformops/authn/internal/routes/auth/github"
 	"github.com/krateoplatformops/authn/internal/routes/auth/info"
 	"github.com/krateoplatformops/authn/internal/routes/auth/ldap"
+	"github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 	"github.com/krateoplatformops/authn/internal/routes/auth/strategies"
 	"github.com/krateoplatformops/authn/internal/routes/health"
 	"github.com/rs/zerolog"
@@ -122,6 +123,7 @@ func main() {
 	all = append(all, basic.Login(cfg, gen))
 	all = append(all, github.Login(cfg, gen))
 	all = append(all, ldap.Login(cfg, gen))
+	all = append(all, oidc.Login(cfg, gen))
 	all = append(all, strategies.List(cfg))
 	all = append(all, info.Info(cfg))
 

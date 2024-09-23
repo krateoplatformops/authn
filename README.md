@@ -135,3 +135,24 @@ $ curl -X POST "https://api.krateoplatformops.io/authn/ldap/login?name=openldap"
    -d '{"username":"XXXXXX","password":"YYYYYY"}'
 ```
 
+### Login with OIDC
+
+To login using OIDC credentials must be sent as JSON using POST:
+
+```sh
+$ curl -X POST "https://api.krateoplatformops.io/authn/oidc/login?name=oidc-example" \
+   -H 'Content-Type: application/json' \
+   -d '{"username":"XXXXXX","password":"YYYYYY"}'
+```
+
+The authn application supports the Discovery endpoint. If you provide a Discovery endpoint the values for `tokenURL` and `userInfoURL` are ignored and overwritten. If you do not provide a Discovery endpoint, the values for `tokenURL` and `userInfoURL` are used.
+To obtain proper groups mappings you need to configure the ID Token response on the application side. Likewise for the profile picture. Examples are listed below for KeyCloak and Azure.
+
+#### Azure
+To obtain groups in the OIDC ID Token response, modify the manifest value `groupMembershipClaims` to `all`.
+To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource.
+
+#### KeyCloak
+To obtain groups, add a custom mapper of type "Group Membership" and give it the Token Claim Name "groups", uncheck `Full group path`. Add `groups` into the `additionalScopes` field of the OIDCConfiguration custom resource.
+To obtain the user avatar/profile image, go to the realm settings, then "User profiles" tab, "Create Attribute", and add one with the name `picture`. Set the profile picture for the user to a URL pointing to a picture. Keycloak will now return the avatar during authentication.
+
