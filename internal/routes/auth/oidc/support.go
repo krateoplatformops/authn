@@ -48,7 +48,7 @@ type idToken struct {
 func getConfig(rc *rest.Config, name string) (oidcConfig, error) {
 	cfg, err := resolvers.OIDCConfigGet(rc, name)
 	if err != nil {
-		return oidcConfig{}, fmt.Errorf("unable to resolve LDAP configuration")
+		return oidcConfig{}, fmt.Errorf("unable to resolve OIDC configuration")
 	}
 
 	res := oidcConfig{
