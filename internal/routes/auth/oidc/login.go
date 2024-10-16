@@ -43,7 +43,7 @@ func (r *loginRoute) Pattern() string {
 }
 
 func (r *loginRoute) Method() string {
-	return http.MethodGet
+	return http.MethodPost
 }
 
 func (r *loginRoute) Handler() http.HandlerFunc {
