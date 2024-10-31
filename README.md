@@ -40,7 +40,11 @@ $ curl https://api.krateoplatformops.io/authn/strategies
   {
     "kind": "oidc",
     "name": "oidc-example",
-    "path": "/oidc/login"
+    "path": "/oidc/login",
+    "extensions": {
+      "authCodeURL": "https://login.microsoftonline.com/XXXX/oauth2/v2.0/authorize?client_id=XXXX\u0026redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Foidc%2Fcallbacl\u0026response_mode=query\u0026response_type=code\u0026scope=openid+email+profile+User.Read",
+      "redirectURL": "http://localhost:8080/oidc/callback"
+    }
   }
 ]
 ```
