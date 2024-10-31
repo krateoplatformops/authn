@@ -10,10 +10,13 @@ type OIDCConfigSpec struct {
 	DiscoveryURL string `json:"discoveryURL"`
 
 	//+optional
+	AuthorizationURL string `json:"authorizationURL"`
+	//+optional
 	TokenURL string `json:"tokenURL"`
-
 	//+optional
 	UserInfoURL string `json:"userInfoURL"`
+
+	RedirectURI string `json:"redirectURI"`
 
 	ClientID     string                  `json:"clientID"`
 	ClientSecret *core.SecretKeySelector `json:"clientSecret"`

@@ -119,6 +119,10 @@ func (r *strategiesRoute) forOIDC() ([]strategy, error) {
 			Kind: "oidc",
 			Path: authoidc.Path,
 			Name: x.Name,
+			Extensions: map[string]string{
+				"authCodeURL": x.Spec.AuthorizationURL,
+				"redirectURL": x.Spec.RedirectURI,
+			},
 		}
 	}
 	return res, nil
