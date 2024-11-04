@@ -44,6 +44,8 @@ spec:
             properties:
               additionalScopes:
                 type: string
+              authorizationURL:
+                type: string
               clientID:
                 type: string
               clientSecret:
@@ -66,6 +68,8 @@ spec:
                 type: object
               discoveryURL:
                 type: string
+              redirectURI:
+                type: string
               tokenURL:
                 type: string
               userInfoURL:
@@ -73,6 +77,7 @@ spec:
             required:
             - clientID
             - clientSecret
+            - redirectURI
             type: object
         required:
         - spec

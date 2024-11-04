@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/krateoplatformops/authn/internal/helpers/decode"
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
@@ -19,6 +18,8 @@ import (
 
 const (
 	Path = "/oidc/login"
+
+	authCodeKey = "X-Auth-Code"
 )
 
 func Login(rc *rest.Config, gen kubeconfig.Generator) routes.Route {
@@ -59,13 +60,6 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			encode.Error(wri, http.StatusExpectationFailed, err)
 			return
 		}
-		var lo loginInfo
-		err := decode.JSONBody(wri, req, &lo)
-		if err != nil && !decode.IsEmptyBodyError(err) {
-			log.Error().Msg(err.Error())
-			encode.Error(wri, http.StatusBadRequest, err)
-			return
-		}
 
 		cfg, err := getConfig(r.rc, name)
 		if err != nil {
@@ -74,7 +68,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		idToken, err := doLogin(lo.Username, lo.Password, cfg)
+		idToken, err := doLogin(req.Header.Get(authCodeKey), cfg)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to decode id token from jwt")
 			encode.Error(wri, http.StatusExpectationFailed, err)
@@ -85,7 +79,6 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		if err != nil {
 			log.Err(err).Str("name", name).
 				Str("tokenURL", cfg.TokenURL).
-				Str("user", lo.Username).
 				Msg("user info default user error for oidc")
 			code := http.StatusForbidden
 			encode.Error(wri, code, err)
@@ -113,9 +106,4 @@ func (r *loginRoute) validate(idToken idToken) (userinfo.Info, error) {
 	uid, _ := shortid.Generate()
 	nfo := userinfo.NewDefaultUser(strings.Replace(idToken.preferredUsername, "@", "-", 1), uid, idToken.groups, exts)
 	return nfo, nil
-}
-
-type loginInfo struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
 }

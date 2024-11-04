@@ -15,8 +15,10 @@ metadata:
 spec:
   discoveryURL: https://<identity-provider-url>/.well-known/openid-configuration
   # Use these two fields if you do not have a discovery endpoint
+  # authorizationURL: authorization endpoint
   # tokenURL: token endpoint
   # userInfoURL: userinfo endpoint
+  redirectURI: http://localhost:8080/callback
   clientID: <client-id-provided-by-service>
   clientSecret:
     name: oidc-example-secret

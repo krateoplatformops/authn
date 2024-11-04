@@ -17,8 +17,10 @@ import (
 
 type oidcConfig struct {
 	DiscoveryURL     string
+	AuthorizeURL     string
 	TokenURL         string
 	UserInfoURL      string
+	RedirectURI      string
 	ClientID         string
 	ClientSecret     string
 	AdditionalScopes string
@@ -32,11 +34,6 @@ type TokenResponse struct {
 	IDToken     string `json:"id_token"`
 }
 
-type DiscoveryEndpointResponse struct {
-	Token_endpoint    string `json:"token_endpoint"`
-	Userinfo_endpoint string `json:"userinfo_endpoint"`
-}
-
 type idToken struct {
 	name              string
 	email             string
@@ -45,15 +42,17 @@ type idToken struct {
 	avatarURL         string
 }
 
-func getConfig(rc *rest.Config, name string) (oidcConfig, error) {
+func getConfig(rc *rest.Config, name string) (*oidcConfig, error) {
 	cfg, err := resolvers.OIDCConfigGet(rc, name)
 	if err != nil {
-		return oidcConfig{}, fmt.Errorf("unable to resolve OIDC configuration")
+		return &oidcConfig{}, fmt.Errorf("unable to resolve OIDC configuration")
 	}
 
-	res := oidcConfig{
+	res := &oidcConfig{
 		DiscoveryURL:     cfg.Spec.DiscoveryURL,
+		AuthorizeURL:     cfg.Spec.AuthorizationURL,
 		TokenURL:         cfg.Spec.TokenURL,
+		RedirectURI:      cfg.Spec.RedirectURI,
 		UserInfoURL:      cfg.Spec.UserInfoURL,
 		ClientID:         cfg.Spec.ClientID,
 		AdditionalScopes: cfg.Spec.AdditionalScopes,
@@ -72,53 +71,19 @@ func getConfig(rc *rest.Config, name string) (oidcConfig, error) {
 	return res, nil
 }
 
-func doLogin(username, password string, cfg oidcConfig) (idToken, error) {
-	// Use the discovery API to find the TokenURL and UserInfoURL, if present
-	if cfg.DiscoveryURL != "" {
-		request, err := http.NewRequest(http.MethodGet, cfg.DiscoveryURL, nil)
-		if err != nil {
-			return idToken{}, fmt.Errorf("failed to create http request for discovery endpoint: %v", err)
-		}
-		resp, err := http.DefaultClient.Do(request)
-		if err != nil {
-			return idToken{}, fmt.Errorf("failed to send discovery request: %v", err)
-		}
-		endpointsDataJson, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return idToken{}, fmt.Errorf("failed to read discovery response: %v", err)
-		}
-
-		var endpointsData DiscoveryEndpointResponse
-		err = json.Unmarshal(endpointsDataJson, &endpointsData)
-		if err != nil {
-			return idToken{}, fmt.Errorf("failed to unmarshal userinfo response: %v", err)
-		}
-
-		if endpointsData.Token_endpoint != "" {
-			cfg.TokenURL = endpointsData.Token_endpoint
-		}
-
-		if endpointsData.Userinfo_endpoint != "" {
-			cfg.UserInfoURL = endpointsData.Userinfo_endpoint
-		}
-	}
-
-	if cfg.TokenURL == "" && cfg.DiscoveryURL == "" {
-		return idToken{}, fmt.Errorf("url for discovery and token endpoints cannot be both empty")
-	} else if cfg.TokenURL == "" {
-		return idToken{}, fmt.Errorf("url for token endpoint cannot be empty")
-	}
-
-	tokenEndpoint := cfg.TokenURL
+func doLogin(code string, cfg *oidcConfig) (idToken, error) {
 	data := url.Values{}
 	data.Set("client_id", cfg.ClientID)
 	data.Set("client_secret", cfg.ClientSecret)
-	data.Set("grant_type", "password")
-	data.Set("username", username)
-	data.Set("password", password)
-	data.Set("scope", "openid email profile "+cfg.AdditionalScopes)
+	data.Set("code", code)
+	data.Set("redirect_uri", cfg.RedirectURI)
+	data.Set("grant_type", "authorization_code")
+	//data.Set("grant_type", "password")
+	//data.Set("username", username)
+	//data.Set("password", password)
+	//data.Set("scope", "openid email profile "+cfg.AdditionalScopes)
 
-	resp, err := http.PostForm(tokenEndpoint, data)
+	resp, err := http.PostForm(cfg.TokenURL, data)
 	if err != nil {
 		return idToken{}, fmt.Errorf("failed to send request to token endpoint: %v", err)
 	}

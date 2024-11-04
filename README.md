@@ -40,7 +40,11 @@ $ curl https://api.krateoplatformops.io/authn/strategies
   {
     "kind": "oidc",
     "name": "oidc-example",
-    "path": "/oidc/login"
+    "path": "/oidc/login",
+    "extensions": {
+      "authCodeURL": "https://login.microsoftonline.com/XXXX/oauth2/v2.0/authorize?client_id=XXXX\u0026redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Foidc%2Fcallbacl\u0026response_mode=query\u0026response_type=code\u0026scope=openid+email+profile+User.Read",
+      "redirectURL": "http://localhost:8080/oidc/callback"
+    }
   }
 ]
 ```
@@ -142,15 +146,14 @@ $ curl -X POST "https://api.krateoplatformops.io/authn/ldap/login?name=openldap"
 
 ### Login with OIDC
 
-To login using OIDC credentials must be sent as JSON using POST:
+To login using OIDC credentials, the authorization code must be sent throught the `X-Auth-Code` header field:
 
 ```sh
-$ curl -X POST "https://api.krateoplatformops.io/authn/oidc/login?name=oidc-example" \
-   -H 'Content-Type: application/json' \
-   -d '{"username":"XXXXXX","password":"YYYYYY"}'
+$ curl -H "X-Auth-Code: $(AUTH_CODE)" \
+    https://api.krateoplatformops.io/authn/oidc/login?name=oidc-example
 ```
 
-The authn application supports the Discovery endpoint. If you provide a Discovery endpoint the values for `tokenURL` and `userInfoURL` are ignored and overwritten. If you do not provide a Discovery endpoint, the values for `tokenURL` and `userInfoURL` are used.
+The authn application supports the Discovery endpoint. If you provide a Discovery endpoint the values for `authorizationURL`, `tokenURL` and `userInfoURL` are ignored and overwritten. If you do not provide a Discovery endpoint, the values for `authorizationURL`, `tokenURL` and `userInfoURL` are used.
 To obtain proper groups mappings you need to configure the ID Token response on the application side. Likewise for the profile picture. Examples are listed below for Azure and KeyCloak.
 
 #### Azure
