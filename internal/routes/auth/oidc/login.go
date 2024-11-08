@@ -44,7 +44,7 @@ func (r *loginRoute) Pattern() string {
 }
 
 func (r *loginRoute) Method() string {
-	return http.MethodPost
+	return http.MethodGet
 }
 
 func (r *loginRoute) Handler() http.HandlerFunc {
