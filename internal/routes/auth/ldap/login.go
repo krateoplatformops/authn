@@ -11,6 +11,7 @@ import (
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/routes"
+	"github.com/krateoplatformops/authn/internal/status"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
 )
@@ -62,7 +63,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		if len(name) == 0 {
 			err := fmt.Errorf("LDAPConfig 'name' must be specified")
 			log.Err(err).Msgf("empty 'name' parameter in query string")
-			encode.Error(wri, http.StatusBadRequest, err)
+			encode.BadRequest(wri, err)
 			return
 		}
 
@@ -70,14 +71,14 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		err := decode.JSONBody(wri, req, &lo)
 		if err != nil && !decode.IsEmptyBodyError(err) {
 			log.Error().Msg(err.Error())
-			encode.Error(wri, http.StatusBadRequest, err)
+			encode.BadRequest(wri, err)
 			return
 		}
 
 		cfg, err := getConfig(r.rc, name, lo.Username)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to fetch ldap configuration")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.ExpectationFailed(wri, err)
 			return
 		}
 
@@ -93,14 +94,14 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			} else if errors.Is(err, errTooManyEntries) {
 				code = http.StatusMultipleChoices
 			}
-			encode.Error(wri, code, err)
+			encode.Failure(wri, status.New(code, err))
 			return
 		}
 
 		dat, err := r.gen.Generate(nfo)
 		if err != nil {
 			log.Err(err).Msg("kubeconfig creation failure")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 

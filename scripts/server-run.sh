@@ -10,7 +10,7 @@ export AUTHN_PORT=8181
 export AUTHN_KUBECONFIG_CACRT=$CA_DATA
 export AUTHN_KUBECONFIG_CLUSTER_NAME=$CLUSTER
 export AUTHN_KUBECONFIG_SERVER_URL=$SERVER
-export AUTHN_STORE_NAMESPACE=demo-system
+export AUTHN_NAMESPACE=demo-system
 
 kubectl apply -f crds/
 kubectl apply -f testdata/ns.yaml
