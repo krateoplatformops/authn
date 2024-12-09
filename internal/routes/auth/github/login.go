@@ -59,7 +59,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		if len(name) == 0 {
 			err := fmt.Errorf("GithubConfig 'name' must be specified")
 			log.Err(err).Msgf("empty 'name' parameter in query string")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.BadRequest(wri, err)
 			return
 		}
 
@@ -67,14 +67,14 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		log.Debug().Str("name", name).Str("code", code).Msg("received authorization code")
 		if len(code) == 0 {
 			log.Error().Msgf("empty oauth code")
-			encode.Error(wri, http.StatusBadRequest, fmt.Errorf("empty oauth code"))
+			encode.BadRequest(wri, fmt.Errorf("empty oauth code"))
 			return
 		}
 
 		oc, org, apiUrl, err := getConfig(r.rc, name)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to fetch oauth2 configuration")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.ExpectationFailed(wri, err)
 			return
 		}
 
@@ -82,14 +82,14 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		tok, err := oc.Exchange(context.Background(), code)
 		if err != nil {
 			log.Err(err).Msg("unable to auth code for token")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.ExpectationFailed(wri, err)
 			return
 		}
 
 		user, err := r.validate(tok, org, apiUrl)
 		if err != nil {
 			log.Err(err).Msg("unable to fetch user info from github")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.ExpectationFailed(wri, err)
 			return
 		}
 		log.Info().
@@ -100,7 +100,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		dat, err := r.gen.Generate(user)
 		if err != nil {
 			log.Err(err).Msg("kubeconfig creation failure")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 

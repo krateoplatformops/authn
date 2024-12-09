@@ -53,7 +53,7 @@ func (r *infoRoute) Handler() http.HandlerFunc {
 		if len(name) == 0 {
 			err := fmt.Errorf("missing 'name' param")
 			log.Err(err).Msg("required query string param non found")
-			encode.Error(wri, http.StatusBadRequest, err)
+			encode.BadRequest(wri, err)
 			return
 		}
 
@@ -62,7 +62,7 @@ func (r *infoRoute) Handler() http.HandlerFunc {
 			log.Err(err).
 				Str("name", name).
 				Msg("unable to resolve authinfo secret")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 
@@ -71,7 +71,7 @@ func (r *infoRoute) Handler() http.HandlerFunc {
 			log.Err(err).
 				Str("name", name).
 				Msg("unable to encode authinfo")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 

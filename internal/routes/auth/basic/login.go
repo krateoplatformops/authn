@@ -64,7 +64,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		user, err := r.validate(username, password)
 		if err != nil {
 			log.Err(err).Msg("basic auth failed")
-			encode.Error(wri, http.StatusForbidden, err)
+			encode.Forbidden(wri, err)
 			return
 		}
 		log.Debug().
@@ -75,7 +75,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		dat, err := r.gen.Generate(user)
 		if err != nil {
 			log.Err(err).Msg("kubeconfig creation failure")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 

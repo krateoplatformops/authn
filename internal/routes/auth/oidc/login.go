@@ -57,21 +57,21 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		if len(name) == 0 {
 			err := fmt.Errorf("OIDCConfig 'name' must be specified")
 			log.Err(err).Msgf("empty 'name' parameter in query string")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.BadRequest(wri, err)
 			return
 		}
 
 		cfg, err := getConfig(r.rc, name)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to fetch oidc configuration")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.ExpectationFailed(wri, err)
 			return
 		}
 
 		idToken, err := doLogin(req.Header.Get(authCodeKey), cfg)
 		if err != nil {
 			log.Err(err).Str("name", name).Msg("unable to decode id token from jwt")
-			encode.Error(wri, http.StatusExpectationFailed, err)
+			encode.InternalError(wri, err)
 			return
 		}
 
@@ -80,20 +80,18 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			log.Err(err).Str("name", name).
 				Str("tokenURL", cfg.TokenURL).
 				Msg("user info default user error for oidc")
-			code := http.StatusForbidden
-			encode.Error(wri, code, err)
+			encode.Forbidden(wri, err)
 			return
 		}
 
 		dat, err := r.gen.Generate(nfo)
 		if err != nil {
 			log.Err(err).Msg("kubeconfig creation failure")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 
 		encode.Success(wri, nfo, dat)
-
 	}
 }
 

@@ -42,14 +42,14 @@ func (r *listRoute) Handler() http.HandlerFunc {
 		dyn, err := dynamic.NewForConfig(r.rc)
 		if err != nil {
 			log.Err(err).Msg("unable to create kubernetes dynamic config")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 
 		all, err := resolvers.ListGithubConfigs(dyn)
 		if err != nil {
 			log.Err(err).Msg("unable to fetch github oauth2 configurations")
-			encode.Error(wri, http.StatusInternalServerError, err)
+			encode.InternalError(wri, err)
 			return
 		}
 
