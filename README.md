@@ -159,6 +159,7 @@ To obtain proper groups mappings you need to configure the ID Token response on 
 
 #### Azure
 Azure can be configured to authenticate users through OIDC ([Official Azure Documentation for OIDC](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)). To achieve this, you need to create a new app registration as follows:
+
 On Azure:
  - Go to "App registrations" and then hit "New registration";
  - Configure the display name, account types and Redirect URI. The redirect URI must point to Krateo's frontend with an HTTPS endpoint and the path `/auth/oidc`;
@@ -166,6 +167,7 @@ On Azure:
  - In the "Authentication" menu, find and activate `Access tokens` and `ID tokens`;
  - In the "API permissions" menu, add the following: `openid`, `email`, `profile`, `User.Read` and `User.ReadBasic.All`;
  - To obtain groups in the OIDC ID Token response, in the "Manifest" menu, modify the value `groupMembershipClaims` to `all` ([Official Azure documentation for the groupMembershipClaims](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute));
+
 On AuthN:
  - To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource;
  - You can now configure the Authn's CR by using Azure discovery URL, which will be in the following format:
