@@ -14,11 +14,11 @@ metadata:
   namespace: demo-system
 spec:
   discoveryURL: https://<identity-provider-url>/.well-known/openid-configuration
-  # Use these two fields if you do not have a discovery endpoint
+  # Use these three fields if you do not have a discovery endpoint
   # authorizationURL: authorization endpoint
   # tokenURL: token endpoint
   # userInfoURL: userinfo endpoint
-  redirectURI: http://localhost:8080/callback
+  redirectURI: http://localhost:8080/auth/oidc # While any redirect URI can be used, the Krateo frontend requires the /auth/oidc path
   clientID: <client-id-provided-by-service>
   clientSecret:
     name: oidc-example-secret
