@@ -154,16 +154,19 @@ $ curl -H "X-Auth-Code: $(AUTH_CODE)" \
 ```
 
 The authn application supports the Discovery endpoint. If you provide a Discovery endpoint the values for `authorizationURL`, `tokenURL` and `userInfoURL` are ignored and overwritten. If you do not provide a Discovery endpoint, the values for `authorizationURL`, `tokenURL` and `userInfoURL` are used.
+
 To obtain proper groups mappings you need to configure the ID Token response on the application side. Likewise for the profile picture. Examples are listed below for Azure and KeyCloak.
 
 #### Azure
-Azure can be configured to authenticate users through OIDC. To achieve this, you need to create a new app registration:
+Azure can be configured to authenticate users through OIDC ([Official Azure Documentation for OIDC](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)). To achieve this, you need to create a new app registration as follows:
+On Azure:
  - Go to "App registrations" and then hit "New registration";
- - Configure the display name, account types and Redirect URI. The redirect URI must point to Krateo's Authn;
+ - Configure the display name, account types and Redirect URI. The redirect URI must point to Krateo's frontend with an HTTPS endpoint and the path `/auth/oidc`;
  - Create a client secret in "Certificates & secrets", save the value of the secret now as it cannot by visualized afterwards;
  - In the "Authentication" menu, find and activate `Access tokens` and `ID tokens`;
  - In the "API permissions" menu, add the following: `openid`, `email`, `profile`, `User.Read` and `User.ReadBasic.All`;
- - To obtain groups in the OIDC ID Token response, modify the manifest value `groupMembershipClaims` to `all`;
+ - To obtain groups in the OIDC ID Token response, in the "Manifest" menu, modify the value `groupMembershipClaims` to `all` ([Official Azure documentation for the groupMembershipClaims](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute));
+On AuthN:
  - To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource;
  - You can now configure the Authn's CR by using Azure discovery URL, which will be in the following format:
  ```
