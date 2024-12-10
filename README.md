@@ -175,6 +175,27 @@ On AuthN:
 https://login.microsoftonline.com/<your-tenant-id>/v2.0/.well-known/openid-configuration
  ```
 
+##### Troubleshooting
+If you do not get the correct groups in the AuthN response, please verify your Azure OIDC configuration: the manifest value "groupMembershipClaims:All" adds in the JWT ID Token the value "groups", which contains an array of UIDs of the groups the user belongs. You can check the JWT ID Token returned by Azure by simulating the calls to the Authorization and Token endpoints through Postman or curl. The exact endpoints are contained in the "well-known" endpoint (Authorization and Token).
+
+On Azure, set the redirect URI to, for example, "http://localhost:8080" for testing without HTTPS, then open the following page in a web browser:
+```
+https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/authorize?client_id=<client-id>&response_type=code&redirect_uri=http://localhost:8080&response_mode=query&scope=openid email profile User.Read
+```
+Login, then Azure will redirect you to the redirect URI, which will error out, however, there will be a "code" query parameter in the URL. Copy this code parameter being careful not to copy other query parameters. Through cURL or Postman perform a POST to:
+```
+https://login.microsoftonline.com/<tentant-id>/oauth2/v2.0/token
+```
+with the following body values:
+```
+client_id=<client-id>
+client_secret=<client-secret>
+code=<the code from the redirect url>
+redirect_uri=http://localhost:8080
+grant_type=authorization_code
+```
+You can then decode the JWT and verify that "groups" is present with the [Microsoft offline decoder](https://jwt.ms/).
+
 #### KeyCloak
 To obtain groups, add a custom mapper of type "Group Membership" and give it the Token Claim Name "groups", uncheck `Full group path`. Add `groups` into the `additionalScopes` field of the OIDCConfiguration custom resource.
 To obtain the user avatar/profile image, go to the realm settings, then "User profiles" tab, "Create Attribute", and add one with the name `picture`. Set the profile picture for the user to a URL pointing to a picture. Keycloak will now return the avatar during authentication.
