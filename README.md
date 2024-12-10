@@ -166,7 +166,7 @@ On Azure:
  - Create a client secret in "Certificates & secrets", save the value of the secret now as it cannot by visualized afterwards;
  - In the "Authentication" menu, find and activate `Access tokens` and `ID tokens`;
  - In the "API permissions" menu, add the following: `openid`, `email`, `profile`, `User.Read` and `User.ReadBasic.All`;
- - To obtain groups in the OIDC ID Token response, in the "Manifest" menu, modify the value `groupMembershipClaims` to `all` ([Official Azure documentation for the groupMembershipClaims](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute));
+ - To obtain groups in the OIDC ID Token response, in the "Manifest" menu, modify the value `groupMembershipClaims` to `All` ([Official Azure documentation for the groupMembershipClaims](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute));
 
 On AuthN:
  - To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource;
