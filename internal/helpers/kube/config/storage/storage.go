@@ -7,6 +7,7 @@ import (
 	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/secrets"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
+	"github.com/krateoplatformops/snowplow/plumbing/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/rest"
@@ -18,8 +19,6 @@ const (
 	CALabel         = "certificate-authority-data"
 	ProxyUrlLabel   = "proxy-url"
 	ServerUrlLabel  = "server-url"
-
-	secretNameFmt = "%s-clientconfig"
 )
 
 type AuthInfo struct {
@@ -52,7 +51,7 @@ func (st *secretStore) Put(name string, nfo *AuthInfo) error {
 	}
 
 	sec := corev1.Secret{}
-	sec.SetName(fmt.Sprintf(secretNameFmt, name))
+	sec.SetName(fmt.Sprintf("%s-clientconfig", kubeutil.MakeDNS1123Compatible(name)))
 	sec.SetNamespace(ns)
 	sec.StringData = map[string]string{
 		CALabel:         nfo.CAData,
@@ -67,10 +66,8 @@ func (st *secretStore) Put(name string, nfo *AuthInfo) error {
 		return nil
 	}
 
-	if err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return err
-		}
+	if !errors.IsAlreadyExists(err) {
+		return err
 	}
 
 	return secrets.Update(context.TODO(), st.rc, &sec)
@@ -82,9 +79,11 @@ func (st *secretStore) Get(name string) (*AuthInfo, error) {
 		return nil, fmt.Errorf("unable to resolve service namespace: %w", err)
 	}
 
-	sec, err := secrets.Get(context.TODO(), st.rc, &core.SecretKeySelector{
-		Name: fmt.Sprintf(secretNameFmt, name), Namespace: ns,
-	})
+	sec, err := secrets.Get(context.TODO(), st.rc,
+		&core.SecretKeySelector{
+			Namespace: ns,
+			Name:      fmt.Sprintf("%s-clientconfig", kubeutil.MakeDNS1123Compatible(name)),
+		})
 	if err != nil {
 		return nil, err
 	}
