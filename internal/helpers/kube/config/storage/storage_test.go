@@ -1,54 +1,88 @@
 package storage
 
 import (
+	"context"
 	"os"
-	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/krateoplatformops/snowplow/plumbing/e2e"
+	"sigs.k8s.io/e2e-framework/pkg/env"
+	"sigs.k8s.io/e2e-framework/pkg/envconf"
+	"sigs.k8s.io/e2e-framework/pkg/envfuncs"
+	"sigs.k8s.io/e2e-framework/pkg/features"
+	"sigs.k8s.io/e2e-framework/support/kind"
 )
 
-func TestStorage(t *testing.T) {
-	rc, err := newRestConfig()
-	if err != nil {
-		t.Fatal(err)
-	}
+var (
+	testenv     env.Environment
+	clusterName string
+	namespace   string
+)
 
-	os.Setenv(util.NamespaceEnvVar, "default")
+func TestMain(m *testing.M) {
+	namespace = "demo-system"
+	clusterName = "krateo"
+	testenv = env.New()
 
-	want := &AuthInfo{
-		CertData: "XXX",
-		KeyData:  "YYY",
-		CAData:   "ZZZ",
-		Server:   "AAA",
-		ProxyURL: "BBB",
-	}
+	testenv.Setup(
+		envfuncs.CreateCluster(kind.NewProvider(), clusterName),
+		e2e.CreateNamespace(namespace),
 
-	store := Default(rc)
+		func(ctx context.Context, _ *envconf.Config) (context.Context, error) {
+			// TODO: add a wait.For conditional helper that can
+			// check and wait for the existence of a CRD resource
+			time.Sleep(2 * time.Second)
+			return ctx, nil
+		},
+	).Finish(
+		envfuncs.DeleteNamespace(namespace),
+		envfuncs.DestroyCluster(clusterName),
+	)
 
-	err = store.Put("test", want)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	got, err := store.Get("test")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if diff := cmp.Diff(got, want); len(diff) > 0 {
-		t.Fatal(diff)
-	}
+	os.Exit(testenv.Run(m))
 }
 
-func newRestConfig() (*rest.Config, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
+func TestStorage(t *testing.T) {
+	f := features.New("Setup").
+		Setup(func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			os.Setenv(util.NamespaceEnvVar, namespace)
+			return ctx
+		}).
+		Assess("Default Store", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			const (
+				username = "Pinco.Pallo@kubeworld.it"
+			)
 
-	return clientcmd.BuildConfigFromFlags("", filepath.Join(home, ".kube", "config"))
+			want := &AuthInfo{
+				CertData: "XXX",
+				KeyData:  "YYY",
+				CAData:   "ZZZ",
+				Server:   "AAA",
+				ProxyURL: "BBB",
+			}
+
+			store := Default(cfg.Client().RESTConfig())
+
+			err := store.Put(username, want)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			got, err := store.Get(username)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(got, want); len(diff) > 0 {
+				t.Fatal(diff)
+			}
+
+			return ctx
+		}).Feature()
+
+	testenv.Test(t, f)
 }
