@@ -2,8 +2,6 @@ module github.com/krateoplatformops/authn
 
 go 1.23.3
 
-toolchain go1.23.4
-
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/go-ldap/ldap/v3 v3.4.8
