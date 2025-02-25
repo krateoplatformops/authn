@@ -3,25 +3,25 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.15.0
-  name: githubconfigs.oauth.authn.krateo.io
+    controller-gen.kubebuilder.io/version: v0.16.5
+  name: oauthconfigs.oauth.authn.krateo.io
 spec:
   group: oauth.authn.krateo.io
   names:
     categories:
     - krateo
     - authn
-    - github
-    kind: GithubConfig
-    listKind: GithubConfigList
-    plural: githubconfigs
-    singular: githubconfig
+    - oauth
+    kind: OAuthConfig
+    listKind: OAuthConfigList
+    plural: oauthconfigs
+    singular: oauthconfig
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: GithubConfig is a AuthN Service Oauth2 configuration.
+        description: OAuthConfig is a AuthN Service OAuth configuration.
         properties:
           apiVersion:
             description: |-
@@ -42,8 +42,6 @@ spec:
             type: object
           spec:
             properties:
-              apiUrl:
-                type: string
               authStyle:
                 default: 0
                 description: |-
@@ -74,13 +72,25 @@ spec:
                 - name
                 - namespace
                 type: object
-              organization:
-                type: string
               redirectURL:
                 description: |-
                   RedirectURL is the URL to redirect users going through
                   the OAuth flow, after the resource owner's URLs.
                 type: string
+              restActionRef:
+                description: An ObjectRef is a reference to an object with a known
+                  type in an arbitrary namespace.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                  namespace:
+                    description: Namespace of the referenced object.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
               scopes:
                 description: Scope specifies optional requested permissions.
                 items:
@@ -93,7 +103,6 @@ spec:
             - authURL
             - clientID
             - clientSecretRef
-            - organization
             - redirectURL
             - scopes
             - tokenURL

@@ -24,14 +24,14 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-// GithubConfig type metadata.
+// OAuthConfig type metadata.
 var (
-	GithubConfigKind             = reflect.TypeOf(GithubConfig{}).Name()
-	GithubConfigGroupKind        = schema.GroupKind{Group: Group, Kind: GithubConfigKind}.String()
-	GithubConfigKindAPIVersion   = GithubConfigKind + "." + SchemeGroupVersion.String()
-	GithubConfigGroupVersionKind = SchemeGroupVersion.WithKind(GithubConfigKind)
+	OAuthConfigKind             = reflect.TypeOf(OAuthConfig{}).Name()
+	OAuthConfigGroupKind        = schema.GroupKind{Group: Group, Kind: OAuthConfigKind}.String()
+	OAuthConfigKindAPIVersion   = OAuthConfigKind + "." + SchemeGroupVersion.String()
+	OAuthConfigGroupVersionKind = SchemeGroupVersion.WithKind(OAuthConfigKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&GithubConfig{}, &GithubConfigList{})
+	SchemeBuilder.Register(&OAuthConfig{}, &OAuthConfigList{})
 }

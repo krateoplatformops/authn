@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-func TestListGithubConfigs(t *testing.T) {
+func TestListOAuthConfigs(t *testing.T) {
 	os.Setenv(util.NamespaceEnvVar, "demo-system")
 
 	rc, err := newRestConfig()
@@ -22,7 +22,7 @@ func TestListGithubConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := ListGithubConfigs(dyn)
+	res, err := ListOAuthConfigs(dyn)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,5 +1,5 @@
 // +k8s:deepcopy-gen=package
-package oauth2
+package oauth
 
 import "github.com/krateoplatformops/authn/apis/core"
 

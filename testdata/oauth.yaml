@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth2-example-secret
+  namespace: krateo-system
+stringData:
+  clientSecret: # secret
+---
+apiVersion: oauth.authn.krateo.io/v1alpha1
+kind: OAuthConfig
+metadata:
+  name: github-example
+  namespace: krateo-system
+spec:
+  clientID: # client id
+  clientSecretRef:
+    name: oauth2-example-secret
+    namespace: krateo-system
+    key: clientSecret
+  authURL: https://github.com/login/oauth/authorize
+  tokenURL: https://github.com/login/oauth/access_token
+  redirectURL: http://localhost:30080/auth/oauth
+  scopes:
+  - read:user
+  - read:org
+  restActionRef: # mandatory
+    name: test-rest-action-github
+    namespace: krateo-system
+---
+apiVersion: templates.krateo.io/v1
+kind: RESTAction
+metadata:
+  name: test-rest-action-github
+  namespace: krateo-system
+spec:
+  api:
+  - name: userInfo
+    verb: GET
+    headers:
+    - 'Accept: application/vnd.github+json'
+    - 'X-GitHub-Api-Version: 2022-11-28'
+    path: "/user"
+    endpointRef:
+      name: github-api
+      namespace: krateo-system
+    filter: |
+      { "name": .login, "email": .email, "preferredUsername": .login, "avatarURL": .avatar_url }
+  - name: groups
+    verb: POST
+    headers:
+    - 'Content-Type: application/json'
+    path: ""
+    payload: |
+       ${ {query:"query{organization(login:\"krateoplatformops\"){teams(first:100,userLogins:[\"" + .userInfo.name + "\"]){edges{node{slug}}}}}"} }
+    endpointRef:
+      name: github-graphql-api
+      namespace: krateo-system
+    filter: "[.data.organization.teams.edges[] | .node.slug]"
+  filter: |
+    {groups: .groups, "name": .userInfo.name, "email": .userInfo.email, "preferredUsername": .userInfo.preferredUsername, "avatarURL": .userInfo.AvatarURL }
+---
+apiVersion: "v1"
+kind: Secret
+metadata:
+  name: github-api
+  namespace: krateo-system
+stringData:
+  server-url: https://api.github.com
+---
+apiVersion: "v1"
+kind: Secret
+metadata:
+  name: github-graphql-api
+  namespace: krateo-system
+stringData:
+  server-url: https://api.github.com/graphql

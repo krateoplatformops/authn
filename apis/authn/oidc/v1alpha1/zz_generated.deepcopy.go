@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/krateoplatformops/authn/apis/core"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -88,6 +89,11 @@ func (in *OIDCConfigSpec) DeepCopyInto(out *OIDCConfigSpec) {
 	if in.ClientSecret != nil {
 		in, out := &in.ClientSecret, &out.ClientSecret
 		*out = (*in).DeepCopy()
+	}
+	if in.RESTActionRef != nil {
+		in, out := &in.RESTActionRef, &out.RESTActionRef
+		*out = new(core.ObjectRef)
+		**out = **in
 	}
 }
 

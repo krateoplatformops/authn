@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/krateoplatformops/authn/apis/authn/oauth2/github/v1alpha1"
+	"github.com/krateoplatformops/authn/apis/authn/oauth/v1alpha1"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"golang.org/x/oauth2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,8 +33,8 @@ type ConfigSpec struct {
 	LoginRoute string `json:"loginRoute"`
 }
 
-func ListGithubConfigs(dyn dynamic.Interface) ([]*ConfigSpec, error) {
-	all, err := listOauth2Config(dyn, "githubconfigs")
+func ListOAuthConfigs(dyn dynamic.Interface) ([]*ConfigSpec, error) {
+	all, err := listOauthConfig(dyn, "oauthconfigs")
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +43,14 @@ func ListGithubConfigs(dyn dynamic.Interface) ([]*ConfigSpec, error) {
 	}
 
 	for _, x := range all {
-		x.Kind = "github"
-		x.LoginRoute = "/github/login"
+		x.Kind = "oauth"
+		x.LoginRoute = "/oauth/login"
 	}
 
 	return all, nil
 }
 
-func listOauth2Config(dyn dynamic.Interface, resource string) ([]*ConfigSpec, error) {
+func listOauthConfig(dyn dynamic.Interface, resource string) ([]*ConfigSpec, error) {
 	ns, err := util.GetOperatorNamespace()
 	if err != nil {
 		return nil, fmt.Errorf("unable to resolve service namespace: %w", err)
@@ -74,7 +74,7 @@ func listOauth2Config(dyn dynamic.Interface, resource string) ([]*ConfigSpec, er
 
 	res := make([]*ConfigSpec, len(all.Items))
 	for i, x := range all.Items {
-		el := v1alpha1.GithubConfig{}
+		el := v1alpha1.OAuthConfig{}
 		err = runtime.DefaultUnstructuredConverter.FromUnstructured(x.UnstructuredContent(), &el)
 		if err != nil {
 			log.Printf("error converting unstructured: (kind: %s, name: %s)\n", x.GetKind(), x.GetName())
