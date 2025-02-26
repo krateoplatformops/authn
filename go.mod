@@ -8,7 +8,7 @@ require (
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
-	github.com/krateoplatformops/snowplow v0.0.0-20250218095312-bc999fc0fa17
+	github.com/krateoplatformops/snowplow v0.0.0-20250226111717-f0d3196e3c50
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/oauth2 v0.23.0

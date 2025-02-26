@@ -13,7 +13,6 @@ import (
 
 	"github.com/krateoplatformops/authn/internal/env"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
-	"github.com/krateoplatformops/authn/internal/helpers/kube/signup"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/helpers/restaction"
 	"github.com/krateoplatformops/authn/internal/middlewares/cors"
@@ -25,6 +24,7 @@ import (
 	"github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 	"github.com/krateoplatformops/authn/internal/routes/auth/strategies"
 	"github.com/krateoplatformops/authn/internal/routes/health"
+	"github.com/krateoplatformops/snowplow/plumbing/signup"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -169,15 +169,16 @@ func main() {
 	}...)
 	defer stop()
 
-	// Create authn clientconfig for to call snowplow's RESTActions
-	signupHandler := &signup.SignupHandler{
-		Restconfig:   cfg,
+	// Create authn clientconfig to call snowplow's RESTActions
+	_, err = signup.Do(context.TODO(), signup.Options{
+		RestConfig:   cfg,
 		Namespace:    *storageNamespace,
 		CAData:       string(cfg.CAData),
 		ServerURL:    *kubernetesURL,
 		CertDuration: time.Hour * 8760, // 1 year
-	}
-	signupHandler.SignUp(*authnUsername, []string{"authn"})
+		Username:     *authnUsername,
+		UserGroups:   []string{"authn"},
+	})
 
 	go func() {
 		atomic.StoreInt32(&healthy, 1)
