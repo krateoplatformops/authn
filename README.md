@@ -134,7 +134,7 @@ $ curl -H "X-Auth-Code: $(AUTH_CODE)" \
     https://api.krateoplatformops.io/authn/github/login?name=github-example
 ```
 
-The `RestActionRef` is mandatory because, unlike OIDC, OAuth2 returns only the bearer token and no information regarding the user, therefore, the RESTAction is required to compile all fields. See the [#RESTAction](#RESTAction) section for more information.
+The `RestActionRef` is mandatory because, unlike OIDC, OAuth2 returns only the bearer token and no information regarding the user, therefore, the RESTAction is required to compile all fields. See the [RESTAction Configuration](#restaction-configuration) section for more information.
 
 ### Login with LDAP
 
@@ -157,7 +157,7 @@ $ curl -H "X-Auth-Code: $(AUTH_CODE)" \
 
 The authn application supports the Discovery endpoint. If you provide a Discovery endpoint the values for `authorizationURL`, `tokenURL` and `userInfoURL` are ignored and overwritten. If you do not provide a Discovery endpoint, the values for `authorizationURL`, `tokenURL` and `userInfoURL` are used.
 
-To obtain proper groups mappings you need to configure the ID Token response on the application side. Likewise for the profile picture. Examples are listed below for Azure and KeyCloak.
+To obtain proper groups mappings you need to configure the ID Token response on the application side. Likewise for the profile picture. Examples are listed below for Azure and KeyCloak. Alternatively, you can use the RESTAction. See the [RESTAction Configuration](#restaction-configuration) section for more information.
 
 #### Azure
 Azure can be configured to authenticate users through OIDC ([Official Azure Documentation for OIDC](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc)). To achieve this, you need to create a new app registration as follows:
@@ -165,11 +165,11 @@ Azure can be configured to authenticate users through OIDC ([Official Azure Docu
 On Azure:
  - Go to "App registrations" and then hit "New registration";
  - Configure the display name, account types and Redirect URI. The redirect URI must point to Krateo's frontend with an HTTPS endpoint and the path `/auth/oidc`;
- - Create a client secret in "Certificates & secrets", save the value of the secret now as it cannot by visualized afterwards;
+ - Create a client secret in "Certificates & secrets", save the value of the secret now as it cannot be visualized afterwards;
  - In the "Authentication" menu, find and activate `Access tokens` and `ID tokens`;
  - In the "API permissions" menu, add the following: `openid`, `email`, `profile`, `User.Read` and `User.ReadBasic.All`;
 
-To obtain groups:
+To obtain groups you can do one of the following:
 - Include them in the OIDC ID Token response: in the "Manifest" menu in the Azure portal, modify the value `groupMembershipClaims` to `All` ([Official Azure documentation for the groupMembershipClaims](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute));
 - Use the following RESTAction and place it in the `RestActionRef` of the OIDC custom resource:
 ```yaml
@@ -231,6 +231,7 @@ The `RESTActionRef` field in the OAuth2 and OIDC configs is mandatory and option
 - `preferredUsername`: string - mandatory
 - `avatarURL`: string
 - `groups`: []string - mandatory
-In the case of OAuth2, these fields will be used to compile the certificate and the one marked as such are mandatory. They should be included as top level fields in the RESTAction response. See the testdata folder for a Github example. In the case of OIDC instead, these fields are all optional, and if included will overwrite the information obtained from the id token and the userinfo endpoint.
 
-The authentication for the endpoints is automatically set to bearer token, using the token obtained from the OAuth2/OIDC authentication. If the endpoint already specifies an authentication method, then it is not overwritten and it will be used for the API calls instead of the bearer token.
+In the case of OAuth2, these fields are needed to compile the certificate and the ones marked as such are mandatory. They have to be included as top level fields in the RESTAction response. See the testdata folder for a Github example. In the OIDC case, these fields are all optional, and if included will overwrite the information obtained from the id token and the userinfo endpoint.
+
+The authentication for the endpoints of the RESTAction is automatically set to bearer token, using the token obtained from the OAuth2/OIDC authentication. If the endpoint already specifies an authentication method, then it is not overwritten and it will be used for the API calls instead of the bearer token.
