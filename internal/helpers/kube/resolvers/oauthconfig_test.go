@@ -8,7 +8,7 @@ import (
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 )
 
-func TestGetGithubConfig(t *testing.T) {
+func TestGetOauthConfig(t *testing.T) {
 	os.Setenv(util.NamespaceEnvVar, "demo-system")
 
 	rc, err := newRestConfig()
@@ -16,7 +16,7 @@ func TestGetGithubConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := GetGithubConfig(rc, "github-example")
+	res, err := GetOAuthConfig(rc, "oauth-example")
 	if err != nil {
 		t.Fatal(err)
 	}

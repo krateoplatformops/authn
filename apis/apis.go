@@ -2,7 +2,7 @@ package apis
 
 import (
 	basicv1alpha1 "github.com/krateoplatformops/authn/apis/authn/basic/v1alpha1"
-	githubv1alpha1 "github.com/krateoplatformops/authn/apis/authn/oauth2/github/v1alpha1"
+	oauthv1alpha1 "github.com/krateoplatformops/authn/apis/authn/oauth/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -17,6 +17,6 @@ func AddToScheme(s *runtime.Scheme) error {
 func init() {
 	AddToSchemes = append(AddToSchemes,
 		basicv1alpha1.SchemeBuilder.AddToScheme,
-		githubv1alpha1.SchemeBuilder.AddToScheme,
+		oauthv1alpha1.SchemeBuilder.AddToScheme,
 	)
 }

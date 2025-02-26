@@ -46,9 +46,9 @@ func (r *listRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		all, err := resolvers.ListGithubConfigs(dyn)
+		all, err := resolvers.ListOAuthConfigs(dyn)
 		if err != nil {
-			log.Err(err).Msg("unable to fetch github oauth2 configurations")
+			log.Err(err).Msg("unable to fetch oauth configurations")
 			encode.InternalError(wri, err)
 			return
 		}

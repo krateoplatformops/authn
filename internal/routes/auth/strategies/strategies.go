@@ -9,8 +9,8 @@ import (
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/routes"
 	authbasic "github.com/krateoplatformops/authn/internal/routes/auth/basic"
-	authgithub "github.com/krateoplatformops/authn/internal/routes/auth/github"
 	authldap "github.com/krateoplatformops/authn/internal/routes/auth/ldap"
+	authoauth "github.com/krateoplatformops/authn/internal/routes/auth/oauth"
 	authoidc "github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 
 	"github.com/rs/zerolog"
@@ -76,11 +76,11 @@ func (r *strategiesRoute) Handler() http.HandlerFunc {
 			log.Err(err).Msg("unable to get ldap auth strategies")
 		}
 
-		all, err = r.forGithub()
+		all, err = r.forOAuth()
 		if err == nil {
 			list = append(list, all...)
 		} else {
-			log.Err(err).Msg("unable to get github auth strategies")
+			log.Err(err).Msg("unable to get oauth auth strategies")
 		}
 
 		wri.WriteHeader(http.StatusOK)
@@ -149,13 +149,13 @@ func (r *strategiesRoute) forLDAP() ([]strategy, error) {
 	return res, nil
 }
 
-func (r *strategiesRoute) forGithub() ([]strategy, error) {
+func (r *strategiesRoute) forOAuth() ([]strategy, error) {
 	dyn, err := dynamic.NewForConfig(r.rc)
 	if err != nil {
 		return []strategy{}, err
 	}
 
-	all, err := resolvers.ListGithubConfigs(dyn)
+	all, err := resolvers.ListOAuthConfigs(dyn)
 	if err != nil {
 		return []strategy{}, err
 	}
@@ -163,8 +163,8 @@ func (r *strategiesRoute) forGithub() ([]strategy, error) {
 	res := make([]strategy, len(all))
 	for i, x := range all {
 		res[i] = strategy{
-			Kind: "github",
-			Path: authgithub.Path,
+			Kind: "oauth",
+			Path: authoauth.Path,
 			Name: x.Name,
 			Extensions: map[string]string{
 				"authCodeURL": x.AuthCodeURL,

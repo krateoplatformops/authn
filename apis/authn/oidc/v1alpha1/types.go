@@ -23,6 +23,9 @@ type OIDCConfigSpec struct {
 
 	//+optional
 	AdditionalScopes string `json:"additionalScopes"`
+
+	//+optional
+	RESTActionRef *core.ObjectRef `json:"restActionRef,omitempty"`
 }
 
 // +kubebuilder:object:root=true

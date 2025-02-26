@@ -25,3 +25,23 @@ spec:
     namespace: demo-system
     key: clientSecret
   additionalScopes: # e.g., User.Read for Azure
+  restActionRef: # optional
+    name: test-rest-action
+    namespace: krateo-system
+---
+apiVersion: templates.krateo.io/v1
+kind: RESTAction
+metadata:
+  name: test-rest-action
+  namespace: krateo-system
+spec:
+  api:
+  - name: groups
+    verb: GET
+    headers:
+    - 'Accept: application/json'
+    path: "v1.0/me/memberOf?$select=displayName"
+    endpointRef:
+      name: azure-entra
+      namespace: krateo-system
+    filter: .value | map(.displayName)

@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/resolvers"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/secrets"
 	"k8s.io/client-go/rest"
@@ -24,6 +25,7 @@ type oidcConfig struct {
 	ClientID         string
 	ClientSecret     string
 	AdditionalScopes string
+	RESTActionRef    *core.ObjectRef
 }
 
 type TokenResponse struct {
@@ -35,6 +37,7 @@ type TokenResponse struct {
 }
 
 type idToken struct {
+	bearerToken       string
 	name              string
 	email             string
 	preferredUsername string
@@ -56,6 +59,7 @@ func getConfig(rc *rest.Config, name string) (*oidcConfig, error) {
 		UserInfoURL:      cfg.Spec.UserInfoURL,
 		ClientID:         cfg.Spec.ClientID,
 		AdditionalScopes: cfg.Spec.AdditionalScopes,
+		RESTActionRef:    cfg.Spec.RESTActionRef,
 	}
 
 	if ref := cfg.Spec.ClientSecret; ref != nil {
@@ -78,10 +82,6 @@ func doLogin(code string, cfg *oidcConfig) (idToken, error) {
 	data.Set("code", code)
 	data.Set("redirect_uri", cfg.RedirectURI)
 	data.Set("grant_type", "authorization_code")
-	//data.Set("grant_type", "password")
-	//data.Set("username", username)
-	//data.Set("password", password)
-	//data.Set("scope", "openid email profile "+cfg.AdditionalScopes)
 
 	resp, err := http.PostForm(cfg.TokenURL, data)
 	if err != nil {
@@ -131,10 +131,12 @@ func doLogin(code string, cfg *oidcConfig) (idToken, error) {
 	}
 
 	if value, ok := claims["email"]; ok {
-		res.avatarURL = value.(string)
+		res.email = value.(string)
 	} else {
 		callUserInfo = true
 	}
+
+	res.bearerToken = token.AccessToken
 
 	if value, ok := claims["groups"]; ok {
 		interfaceArray := value.([]interface{})
@@ -168,27 +170,33 @@ func doLogin(code string, cfg *oidcConfig) (idToken, error) {
 
 			// Replace the missing values that we did not find in the id token
 			if _, ok := claims["preferred_username"]; !ok {
-				res.preferredUsername = userInfo["preferred_username"].(string)
+				if _, okk := userInfo["preferred_username"]; okk {
+					res.preferredUsername = userInfo["preferred_username"].(string)
+				}
 			}
 
 			if _, ok := claims["name"]; !ok {
-				res.name = userInfo["name"].(string)
+				if _, okk := userInfo["name"]; okk {
+					res.name = userInfo["name"].(string)
+				}
 			}
 
 			if _, ok := claims["picture"]; !ok {
-				res.avatarURL = userInfo["picture"].(string)
+				if _, okk := userInfo["picture"]; okk {
+					res.avatarURL = userInfo["picture"].(string)
+				}
 			}
 
 			if _, ok := claims["email"]; !ok {
-				res.avatarURL = userInfo["email"].(string)
+				if _, okk := userInfo["email"]; okk {
+					res.email = userInfo["email"].(string)
+				}
 			}
 		} else {
 			return idToken{}, fmt.Errorf("unable to get access_token from response")
 		}
 	}
-
 	return res, nil
-
 }
 
 func decodeJWT(tokenString string) (map[string]interface{}, error) {
@@ -212,4 +220,53 @@ func decodeJWT(tokenString string) (map[string]interface{}, error) {
 	}
 
 	return claims, nil
+}
+
+func updateConfig(config idToken, additionalFieldstoReplace map[string]interface{}) (idToken, error) {
+	for key := range additionalFieldstoReplace {
+		if additionalFieldstoReplace[key] != nil {
+			switch key {
+			case "name":
+				v, ok := additionalFieldstoReplace[key].(string)
+				if !ok {
+					return config, fmt.Errorf("error parsing updated config: %s is not type string", key)
+				}
+				config.name = v
+			case "email":
+				v, ok := additionalFieldstoReplace[key].(string)
+				if !ok {
+					return config, fmt.Errorf("error parsing updated config: %s is not type string", key)
+				}
+				config.email = v
+			case "preferredUsername":
+				v, ok := additionalFieldstoReplace[key].(string)
+				if !ok {
+					return config, fmt.Errorf("error parsing updated config: %s is not type string", key)
+				}
+				config.preferredUsername = v
+			case "groups":
+				groups := make([]string, 0)
+				v, ok := additionalFieldstoReplace[key].([]interface{})
+				if !ok {
+					return config, fmt.Errorf("error parsing updated config: %s is not type array", key)
+				}
+				for _, i := range v {
+					if _, okk := i.(string); !okk {
+						return config, fmt.Errorf("error parsing updated config: %s is not type string array", key)
+					}
+					groups = append(groups, i.(string))
+				}
+				config.groups = groups
+			case "avatarURL":
+				v, ok := additionalFieldstoReplace[key].(string)
+				if !ok {
+					return config, fmt.Errorf("error parsing updated config: %s is not type string", key)
+				}
+
+				config.avatarURL = v
+
+			}
+		}
+	}
+	return config, nil
 }

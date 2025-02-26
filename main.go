@@ -14,15 +14,17 @@ import (
 	"github.com/krateoplatformops/authn/internal/env"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
+	"github.com/krateoplatformops/authn/internal/helpers/restaction"
 	"github.com/krateoplatformops/authn/internal/middlewares/cors"
 	"github.com/krateoplatformops/authn/internal/routes"
 	"github.com/krateoplatformops/authn/internal/routes/auth/basic"
-	"github.com/krateoplatformops/authn/internal/routes/auth/github"
 	"github.com/krateoplatformops/authn/internal/routes/auth/info"
 	"github.com/krateoplatformops/authn/internal/routes/auth/ldap"
+	"github.com/krateoplatformops/authn/internal/routes/auth/oauth"
 	"github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 	"github.com/krateoplatformops/authn/internal/routes/auth/strategies"
 	"github.com/krateoplatformops/authn/internal/routes/health"
+	"github.com/krateoplatformops/snowplow/plumbing/signup"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -51,8 +53,12 @@ func main() {
 		env.String("AUTHN_KUBECONFIG_CLUSTER_NAME", "krateo"), "cluster name for generated kubeconfig")
 	kubernetesURL := flag.String("kubeconfig-server-url",
 		env.String("AUTHN_KUBECONFIG_SERVER_URL", ""), "kubernetes api server url for generated kubeconfig")
+	snowplowURL := flag.String("snowplow-url",
+		env.String("URL_SNOWPLOW", "http://snowplow.krateo-system.svc.cluster.local:8081"), "snowplow url for restaction api calls")
 	storageNamespace := flag.String("namespace",
 		env.String("AUTHN_NAMESPACE", ""), "namespace where to store secrets with generated config")
+	authnUsername := flag.String("authn-username",
+		env.String("AUTHN_USERNAME", "authn"), "authn username for clientconfig for restaction api calls")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
@@ -116,14 +122,18 @@ func main() {
 		kubeconfig.Log(log),
 	)
 
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, restaction.RestActionContextKey("username"), *authnUsername)
+	ctx = context.WithValue(ctx, restaction.RestActionContextKey("snowplowURL"), *snowplowURL)
+
 	healthy := int32(0)
 
 	all := []routes.Route{}
 	all = append(all, health.Check(&healthy, Version, serviceName))
 	all = append(all, basic.Login(cfg, gen))
-	all = append(all, github.Login(cfg, gen))
+	all = append(all, oauth.Login(ctx, cfg, gen))
 	all = append(all, ldap.Login(cfg, gen))
-	all = append(all, oidc.Login(cfg, gen))
+	all = append(all, oidc.Login(ctx, cfg, gen))
 	all = append(all, strategies.List(cfg))
 	all = append(all, info.Info(cfg))
 
@@ -149,7 +159,7 @@ func main() {
 		IdleTimeout:  30 * time.Second,
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), []os.Signal{
+	ctx, stop := signal.NotifyContext(ctx, []os.Signal{
 		os.Interrupt,
 		syscall.SIGINT,
 		syscall.SIGTERM,
@@ -158,6 +168,17 @@ func main() {
 		syscall.SIGQUIT,
 	}...)
 	defer stop()
+
+	// Create authn clientconfig to call snowplow's RESTActions
+	_, err = signup.Do(context.TODO(), signup.Options{
+		RestConfig:   cfg,
+		Namespace:    *storageNamespace,
+		CAData:       string(cfg.CAData),
+		ServerURL:    *kubernetesURL,
+		CertDuration: time.Hour * 8760, // 1 year
+		Username:     *authnUsername,
+		UserGroups:   []string{"authn"},
+	})
 
 	go func() {
 		atomic.StoreInt32(&healthy, 1)

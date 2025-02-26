@@ -57,7 +57,7 @@ demo: ## Starts demo.
 	$(KUBECTL) apply -f crds/
 	$(KUBECTL) apply -f testdata/ns.yaml
 	$(KUBECTL) apply -f testdata/basic.yaml
-	$(KUBECTL) apply -f testdata/github.yaml
+	$(KUBECTL) apply -f testdata/oauth.yaml
 	$(KUBECTL) apply -f testdata/ldap-local.yaml
 	$(KUBECTL) apply -f testdata/ldap-forumsys.yaml
 	$(KUBECTL) apply -f testdata/oidc-azure.yaml
