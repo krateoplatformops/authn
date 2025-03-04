@@ -186,7 +186,7 @@ func (r *strategiesRoute) forOAuth() ([]strategy, error) {
 			}
 		}
 		res[i] = strategy{
-			Kind:     "github",
+			Kind:     "oauth",
 			Path:     authoauth.Path,
 			Name:     x.Name,
 			Graphics: x.Graphics,
