@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/resolvers"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"github.com/krateoplatformops/authn/internal/routes"
@@ -26,6 +27,11 @@ func List(rc *rest.Config) routes.Route {
 
 const (
 	Path = "/strategies"
+
+	defaultLoginText       = "Login with "
+	defaultBackgroundColor = "#ffffff"
+	defaultTextColor       = "#000000"
+	defaultIcon            = "key"
 )
 
 var _ routes.Route = (*strategiesRoute)(nil)
@@ -115,10 +121,19 @@ func (r *strategiesRoute) forOIDC() ([]strategy, error) {
 
 	res := make([]strategy, len(all.Items))
 	for i, x := range all.Items {
+		if x.Spec.Graphics == nil {
+			x.Spec.Graphics = &core.Graphics{
+				Icon:            defaultIcon,
+				DisplayName:     defaultLoginText + "OIDC",
+				BackgroundColor: defaultBackgroundColor,
+				TextColor:       defaultTextColor,
+			}
+		}
 		res[i] = strategy{
-			Kind: "oidc",
-			Path: authoidc.Path,
-			Name: x.Name,
+			Kind:     "oidc",
+			Path:     authoidc.Path,
+			Name:     x.Name,
+			Graphics: x.Spec.Graphics,
 			Extensions: map[string]string{
 				"authCodeURL": x.Spec.AuthorizationURL,
 				"redirectURL": x.Spec.RedirectURI,
@@ -162,10 +177,19 @@ func (r *strategiesRoute) forOAuth() ([]strategy, error) {
 
 	res := make([]strategy, len(all))
 	for i, x := range all {
+		if x.Graphics == nil {
+			x.Graphics = &core.Graphics{
+				Icon:            defaultIcon,
+				DisplayName:     defaultLoginText + "OAuth2",
+				BackgroundColor: defaultBackgroundColor,
+				TextColor:       defaultTextColor,
+			}
+		}
 		res[i] = strategy{
-			Kind: "oauth",
-			Path: authoauth.Path,
-			Name: x.Name,
+			Kind:     "github",
+			Path:     authoauth.Path,
+			Name:     x.Name,
+			Graphics: x.Graphics,
 			Extensions: map[string]string{
 				"authCodeURL": x.AuthCodeURL,
 				"redirectURL": x.RedirectURL,
@@ -178,6 +202,7 @@ func (r *strategiesRoute) forOAuth() ([]strategy, error) {
 type strategy struct {
 	Kind       string            `json:"kind"`
 	Name       string            `json:"name,omitempty"`
+	Graphics   *core.Graphics    `json:"graphics,omitempty"`
 	Path       string            `json:"path"`
 	Extensions map[string]string `json:"extensions,omitempty"`
 }

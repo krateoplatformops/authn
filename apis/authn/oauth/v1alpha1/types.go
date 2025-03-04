@@ -9,6 +9,8 @@ import (
 type OAuthConfigSpec struct {
 	authnoauth.ConfigSpec `json:",inline"`
 	RESTActionRef         *core.ObjectRef `json:"restActionRef,omitempty"`
+	//+optional
+	Graphics *core.Graphics `json:"graphics,omitempty"`
 }
 
 // +kubebuilder:object:root=true

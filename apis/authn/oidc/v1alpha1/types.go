@@ -26,6 +26,8 @@ type OIDCConfigSpec struct {
 
 	//+optional
 	RESTActionRef *core.ObjectRef `json:"restActionRef,omitempty"`
+	//+optional
+	Graphics *core.Graphics `json:"graphics,omitempty"`
 }
 
 // +kubebuilder:object:root=true
