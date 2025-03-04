@@ -68,6 +68,22 @@ spec:
                 type: object
               discoveryURL:
                 type: string
+              graphics:
+                properties:
+                  backgroundColor:
+                    type: string
+                  displayName:
+                    type: string
+                  icon:
+                    type: string
+                  textColor:
+                    type: string
+                required:
+                - backgroundColor
+                - displayName
+                - icon
+                - textColor
+                type: object
               redirectURI:
                 type: string
               restActionRef:

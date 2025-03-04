@@ -1,5 +1,20 @@
 package core
 
+// An object that contains the description of the frontend elements of this login method
+type Graphics struct {
+	// Icon of the login button
+	Icon string `json:"icon"`
+
+	// Text on the login button
+	DisplayName string `json:"displayName"`
+
+	// Background color of the login button
+	BackgroundColor string `json:"backgroundColor"`
+
+	// Text color of the login button
+	TextColor string `json:"textColor"`
+}
+
 // An ObjectRef is a reference to an object with a known type in an arbitrary namespace.
 type ObjectRef struct {
 	// Name of the referenced object.

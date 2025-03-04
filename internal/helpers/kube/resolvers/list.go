@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/krateoplatformops/authn/apis/authn/oauth/v1alpha1"
+	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 	"golang.org/x/oauth2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,6 +32,9 @@ type ConfigSpec struct {
 
 	// LoginRoute path of the login handler
 	LoginRoute string `json:"loginRoute"`
+
+	// Graphics frontend options
+	Graphics *core.Graphics `json:"graphics"`
 }
 
 func ListOAuthConfigs(dyn dynamic.Interface) ([]*ConfigSpec, error) {
@@ -95,6 +99,7 @@ func listOauthConfig(dyn dynamic.Interface, resource string) ([]*ConfigSpec, err
 			Name:        x.GetName(),
 			AuthCodeURL: oc.AuthCodeURL(el.GetName()),
 			RedirectURL: el.Spec.RedirectURL,
+			Graphics:    el.Spec.Graphics,
 		}
 	}
 
