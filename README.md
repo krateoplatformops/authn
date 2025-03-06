@@ -31,6 +31,12 @@ $ curl https://api.krateoplatformops.io/authn/strategies
   {
     "kind": "oauth",
     "name": "github-example",
+    "graphics": {
+      "icon": "github",
+      "displayName": "Login with Github",
+      "backgroundColor": "#ffffff",
+      "textColor": "#000000"
+    },
     "path": "/oauth/login",
     "extensions": {
       "authCodeURL": "https://github.com/login/oauth/authorize?client_id=XXXX&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fgithub%2Fgrant&response_type=code&scope=read%3Auser+read%3Aorg&state=YYYY",
@@ -40,6 +46,12 @@ $ curl https://api.krateoplatformops.io/authn/strategies
   {
     "kind": "oidc",
     "name": "oidc-example",
+    "graphics": {
+      "icon": "key",
+      "displayName": "Login with Azure",
+      "backgroundColor": "#ffffff",
+      "textColor": "#000000"
+    },
     "path": "/oidc/login",
     "extensions": {
       "authCodeURL": "https://login.microsoftonline.com/XXXX/oauth2/v2.0/authorize?client_id=XXXX\u0026redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Foidc%2Fcallbacl\u0026response_mode=query\u0026response_type=code\u0026scope=openid+email+profile+User.Read",
@@ -235,3 +247,13 @@ The `RESTActionRef` field in the OAuth2 and OIDC configs is mandatory and option
 In the case of OAuth2, these fields are needed to compile the certificate and the ones marked as such are mandatory. They have to be included as top level fields in the RESTAction response. See the testdata folder for a Github example. In the OIDC case, these fields are all optional, and if included will overwrite the information obtained from the id token and the userinfo endpoint.
 
 The authentication for the endpoints of the RESTAction is automatically set to bearer token, using the token obtained from the OAuth2/OIDC authentication. If the endpoint already specifies an authentication method, then it is not overwritten and it will be used for the API calls instead of the bearer token.
+
+## Graphics Configuration
+The OAuth2 and OIDC authentication methods also support a `graphics` object that allows to configure how the button for the redirect to the authentication provider portal is visualized in the frontend login screen.
+```yaml
+  graphics:
+    icon: # icon name from the fontawesome library
+    displayName: # text to be visualized on the button
+    backgroundColor: # color of the button in hexadecimal, e.g., #0022ff
+    textColor: # color of the text in the button, also in hexadecimal, e.g., #0022ff
+```
