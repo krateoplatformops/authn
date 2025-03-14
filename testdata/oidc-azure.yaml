@@ -18,16 +18,21 @@ spec:
   # authorizationURL: authorization endpoint
   # tokenURL: token endpoint
   # userInfoURL: userinfo endpoint
-  redirectURI: http://localhost:8080/auth/oidc # While any redirect URI can be used, the Krateo frontend requires the /auth/oidc path
+  redirectURI: http://localhost:8080/auth?kind=oidc # While any redirect URI can be used, the Krateo frontend requires /auth?kind=oidc
   clientID: <client-id-provided-by-service>
   clientSecret:
     name: oidc-example-secret
     namespace: demo-system
     key: clientSecret
-  additionalScopes: # e.g., User.Read for Azure
+  additionalScopes: # e.g., "User.Read Directory.Read.All" for Azure
   restActionRef: # optional
     name: test-rest-action
     namespace: krateo-system
+  graphics:
+    icon: windows
+    displayName: "Login with Azure"
+    backgroundColor: "#4444ff"
+    textColor: "#ffffff"
 ---
 apiVersion: templates.krateo.io/v1
 kind: RESTAction

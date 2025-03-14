@@ -27,11 +27,6 @@ func List(rc *rest.Config) routes.Route {
 
 const (
 	Path = "/strategies"
-
-	defaultLoginText       = "Login with "
-	defaultBackgroundColor = "#ffffff"
-	defaultTextColor       = "#000000"
-	defaultIcon            = "key"
 )
 
 var _ routes.Route = (*strategiesRoute)(nil)
@@ -122,12 +117,7 @@ func (r *strategiesRoute) forOIDC() ([]strategy, error) {
 	res := make([]strategy, len(all.Items))
 	for i, x := range all.Items {
 		if x.Spec.Graphics == nil {
-			x.Spec.Graphics = &core.Graphics{
-				Icon:            defaultIcon,
-				DisplayName:     defaultLoginText + "OIDC",
-				BackgroundColor: defaultBackgroundColor,
-				TextColor:       defaultTextColor,
-			}
+			x.Spec.Graphics = getDefaultGraphicsObject("OIDC")
 		}
 		res[i] = strategy{
 			Kind:     "oidc",
@@ -155,10 +145,14 @@ func (r *strategiesRoute) forLDAP() ([]strategy, error) {
 
 	res := make([]strategy, len(all.Items))
 	for i, x := range all.Items {
+		if x.Spec.Graphics == nil {
+			x.Spec.Graphics = getDefaultGraphicsObject("LDAP")
+		}
 		res[i] = strategy{
-			Kind: "ldap",
-			Path: authldap.Path,
-			Name: x.Name,
+			Kind:     "ldap",
+			Path:     authldap.Path,
+			Name:     x.Name,
+			Graphics: x.Spec.Graphics,
 		}
 	}
 	return res, nil
@@ -178,12 +172,7 @@ func (r *strategiesRoute) forOAuth() ([]strategy, error) {
 	res := make([]strategy, len(all))
 	for i, x := range all {
 		if x.Graphics == nil {
-			x.Graphics = &core.Graphics{
-				Icon:            defaultIcon,
-				DisplayName:     defaultLoginText + "OAuth2",
-				BackgroundColor: defaultBackgroundColor,
-				TextColor:       defaultTextColor,
-			}
+			x.Graphics = getDefaultGraphicsObject("OAuth2")
 		}
 		res[i] = strategy{
 			Kind:     "oauth",

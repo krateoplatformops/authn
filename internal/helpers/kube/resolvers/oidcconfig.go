@@ -3,6 +3,7 @@ package resolvers
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -145,9 +146,12 @@ func authCodeURL(cfg *oidcv1alpha1.OIDCConfig) string {
 	}
 	v.Set("scope", "openid email profile "+cfg.Spec.AdditionalScopes)
 
-	// if state != "" {
-	// 	v.Set("state", state)
-	// }
+	b := make([]byte, 32)
+	rand.Read(b)
+	state := string(b)
+	if state != "" {
+		v.Set("state", state)
+	}
 
 	if strings.Contains(cfg.Spec.AuthorizationURL, "?") {
 		buf.WriteByte('&')

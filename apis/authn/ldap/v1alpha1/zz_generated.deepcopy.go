@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/krateoplatformops/authn/apis/core"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -97,6 +98,11 @@ func (in *LDAPConfigSpec) DeepCopyInto(out *LDAPConfigSpec) {
 	if in.TLS != nil {
 		in, out := &in.TLS, &out.TLS
 		*out = new(bool)
+		**out = **in
+	}
+	if in.Graphics != nil {
+		in, out := &in.Graphics, &out.Graphics
+		*out = new(core.Graphics)
 		**out = **in
 	}
 }
