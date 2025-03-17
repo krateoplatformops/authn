@@ -73,6 +73,28 @@ spec:
               dialURL:
                 description: 'DialURL: LDAP Server address.'
                 type: string
+              graphics:
+                description: An object that contains the description of the frontend
+                  elements of this login method
+                properties:
+                  backgroundColor:
+                    description: Background color of the login button
+                    type: string
+                  displayName:
+                    description: Text on the login button
+                    type: string
+                  icon:
+                    description: Icon of the login button
+                    type: string
+                  textColor:
+                    description: Text color of the login button
+                    type: string
+                required:
+                - backgroundColor
+                - displayName
+                - icon
+                - textColor
+                type: object
               tls:
                 type: boolean
             required:

@@ -26,13 +26,19 @@ $ curl https://api.krateoplatformops.io/authn/strategies
   {
     "kind": "ldap",
     "name": "openldap",
+    "graphics": {
+      "icon": "key",
+      "displayName": "Login with LDAP",
+      "backgroundColor": "#ffffff",
+      "textColor": "#000000"
+    },
     "path": "/ldap/login"
   },
   {
     "kind": "oauth",
     "name": "github-example",
     "graphics": {
-      "icon": "github",
+      "icon": "fa-github",
       "displayName": "Login with Github",
       "backgroundColor": "#ffffff",
       "textColor": "#000000"
@@ -40,22 +46,22 @@ $ curl https://api.krateoplatformops.io/authn/strategies
     "path": "/oauth/login",
     "extensions": {
       "authCodeURL": "https://github.com/login/oauth/authorize?client_id=XXXX&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fgithub%2Fgrant&response_type=code&scope=read%3Auser+read%3Aorg&state=YYYY",
-      "redirectURL": "http://localhost:8888/oauth/grant"
+      "redirectURL": "http://localhost:30080/auth?kind=oauth"
     }
   },
   {
     "kind": "oidc",
     "name": "oidc-example",
     "graphics": {
-      "icon": "key",
+      "icon": "windows",
       "displayName": "Login with Azure",
-      "backgroundColor": "#ffffff",
-      "textColor": "#000000"
+      "backgroundColor": "#4444ff",
+      "textColor": "#ffffff"
     },
     "path": "/oidc/login",
     "extensions": {
       "authCodeURL": "https://login.microsoftonline.com/XXXX/oauth2/v2.0/authorize?client_id=XXXX\u0026redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Foidc%2Fcallbacl\u0026response_mode=query\u0026response_type=code\u0026scope=openid+email+profile+User.Read",
-      "redirectURL": "http://localhost:8080/oidc/callback"
+      "redirectURL": "http://localhost:8080/auth?kind=oidc"
     }
   }
 ]
@@ -143,7 +149,7 @@ Example:
 
 ```sh
 $ curl -H "X-Auth-Code: $(AUTH_CODE)" \
-    https://api.krateoplatformops.io/authn/github/login?name=github-example
+    https://api.krateoplatformops.io/authn/oauth/login?name=github-example
 ```
 
 The `RestActionRef` is mandatory because, unlike OIDC, OAuth2 returns only the bearer token and no information regarding the user, therefore, the RESTAction is required to compile all fields. See the [RESTAction Configuration](#restaction-configuration) section for more information.
@@ -202,6 +208,7 @@ spec:
       namespace: krateo-system
     filter: .value | map(.displayName)
 ```
+To obtain groups through the rest action, add `Directory.Read.All` in the `additionalScopes`.
 
 On AuthN:
  - To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource;
@@ -209,6 +216,11 @@ On AuthN:
  ```
 https://login.microsoftonline.com/<your-tenant-id>/v2.0/.well-known/openid-configuration
  ```
+
+Scopes in the `additionalScopes` field can be simply separated with a space. Example for Azure groups with the RESTAction:
+```yaml
+  additionalScopes: User.Read Directory.Read.All
+```
 
 ##### Troubleshooting
 If you do not get the correct groups in the AuthN response, please verify your Azure OIDC configuration: the manifest value "groupMembershipClaims:All" adds in the JWT ID Token the value "groups", which contains an array of UIDs of the groups the user belongs. You can check the JWT ID Token returned by Azure by simulating the calls to the Authorization and Token endpoints through Postman or curl. The exact endpoints are contained in the "well-known" endpoint (Authorization and Token).

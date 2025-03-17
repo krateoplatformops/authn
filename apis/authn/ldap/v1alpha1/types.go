@@ -27,6 +27,9 @@ type LDAPConfigSpec struct {
 	BaseDN string `json:"baseDN"`
 
 	TLS *bool `json:"tls,omitempty"`
+
+	//+optional
+	Graphics *core.Graphics `json:"graphics,omitempty"`
 }
 
 // +kubebuilder:object:root=true

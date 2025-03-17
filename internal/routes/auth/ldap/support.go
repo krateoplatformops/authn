@@ -109,7 +109,31 @@ func doLogin(username, password string, cfg ldapConfig) (userinfo.Info, error) {
 		return nil, err
 	}
 
+	// Now perform a search for groups that the user belongs to
+	groupFilter := fmt.Sprintf("(uniquemember=uid=%s,dc=example,dc=com)", ldap.EscapeFilter(username))
+	groupSearchRequest := ldap.NewSearchRequest(
+		cfg.baseDN,
+		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
+		groupFilter,
+		[]string{"cn"},
+		nil,
+	)
+
+	groupSR, err := l.Search(groupSearchRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []string{}
+	for _, entry := range groupSR.Entries {
+		groups = append(groups, entry.GetAttributeValue("cn"))
+	}
+
 	nfo := ldapEntryToUserInfo(user)
+	if len(nfo.GetGroups()) == 0 {
+		nfo.SetGroups(groups)
+	}
+
 	return nfo, nil
 }
 

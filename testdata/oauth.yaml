@@ -19,7 +19,7 @@ spec:
     key: clientSecret
   authURL: https://github.com/login/oauth/authorize
   tokenURL: https://github.com/login/oauth/access_token
-  redirectURL: http://localhost:30080/auth/oauth
+  redirectURL: http://localhost:30080/auth?kind=oauth
   scopes:
   - read:user
   - read:org
