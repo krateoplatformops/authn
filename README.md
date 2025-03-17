@@ -46,7 +46,7 @@ $ curl https://api.krateoplatformops.io/authn/strategies
     "path": "/oauth/login",
     "extensions": {
       "authCodeURL": "https://github.com/login/oauth/authorize?client_id=XXXX&redirect_uri=http%3A%2F%2Flocalhost%3A8888%2Fgithub%2Fgrant&response_type=code&scope=read%3Auser+read%3Aorg&state=YYYY",
-      "redirectURL": "http://localhost:30080//auth?kind=oauth"
+      "redirectURL": "http://localhost:30080/auth?kind=oauth"
     }
   },
   {
