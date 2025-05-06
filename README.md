@@ -38,7 +38,7 @@ $ curl https://api.krateoplatformops.io/authn/strategies
     "kind": "oauth",
     "name": "github-example",
     "graphics": {
-      "icon": "fa-github",
+      "icon": "fa-brands fa-github",
       "displayName": "Login with Github",
       "backgroundColor": "#ffffff",
       "textColor": "#000000"
@@ -53,7 +53,7 @@ $ curl https://api.krateoplatformops.io/authn/strategies
     "kind": "oidc",
     "name": "oidc-example",
     "graphics": {
-      "icon": "windows",
+      "icon": "fa-brands fa-windows",
       "displayName": "Login with Azure",
       "backgroundColor": "#4444ff",
       "textColor": "#ffffff"
@@ -264,7 +264,7 @@ The authentication for the endpoints of the RESTAction is automatically set to b
 The OAuth2 and OIDC authentication methods also support a `graphics` object that allows to configure how the button for the redirect to the authentication provider portal is visualized in the frontend login screen.
 ```yaml
   graphics:
-    icon: # icon name from the fontawesome library
+    icon: # icon name from the fontawesome library, for icons like github and windows, use "fa-brands fa-github" or "fa-brands fa-windows"
     displayName: # text to be visualized on the button
     backgroundColor: # color of the button in hexadecimal, e.g., #0022ff
     textColor: # color of the text in the button, also in hexadecimal, e.g., #0022ff

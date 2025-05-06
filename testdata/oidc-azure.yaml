@@ -29,7 +29,7 @@ spec:
     name: test-rest-action
     namespace: krateo-system
   graphics:
-    icon: windows
+    icon: "fa-brands fa-windows"
     displayName: "Login with Azure"
     backgroundColor: "#4444ff"
     textColor: "#ffffff"
