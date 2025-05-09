@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
 	kubeconfig "github.com/krateoplatformops/authn/internal/helpers/kube/config"
@@ -23,17 +24,28 @@ const (
 	Path = "/basic/login"
 )
 
-func Login(rc *rest.Config, gen kubeconfig.Generator) routes.Route {
+type LoginOptions struct {
+	KubeconfigGenerator kubeconfig.Generator
+	JwtDuration         time.Duration
+	JwtSingKey          string
+}
+
+func Login(rc *rest.Config, opts LoginOptions) routes.Route {
 	return &loginRoute{
-		rc: rc, gen: gen,
+		rc:          rc,
+		gen:         opts.KubeconfigGenerator,
+		jwtDuration: opts.JwtDuration,
+		jwtSignKey:  opts.JwtSingKey,
 	}
 }
 
 var _ routes.Route = (*loginRoute)(nil)
 
 type loginRoute struct {
-	rc  *rest.Config
-	gen kubeconfig.Generator
+	rc          *rest.Config
+	gen         kubeconfig.Generator
+	jwtDuration time.Duration
+	jwtSignKey  string
 }
 
 func (r *loginRoute) Name() string {
@@ -84,7 +96,11 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		encode.Success(wri, user, dat)
+		encode.Success(wri, dat, &encode.Extras{
+			UserInfo:    user,
+			JwtDuration: r.jwtDuration,
+			JwtSingKey:  r.jwtSignKey,
+		})
 	}
 }
 

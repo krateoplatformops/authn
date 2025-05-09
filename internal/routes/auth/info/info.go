@@ -75,6 +75,6 @@ func (r *infoRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		encode.Success(wri, nil, dat)
+		encode.Success(wri, dat, nil)
 	}
 }

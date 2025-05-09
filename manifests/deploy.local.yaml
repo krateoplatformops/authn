@@ -7,7 +7,7 @@ metadata:
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: krateo-authn
+  name: authn
   namespace: demo-system
 ---
 apiVersion: v1
@@ -26,10 +26,37 @@ spec:
     protocol: TCP
     nodePort: 30082
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secrets-admin
+  namespace: demo-system
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: secrets-admin-binding
+  namespace: demo-system
+subjects:
+- kind: ServiceAccount
+  name: authn
+  namespace: demo-system
+roleRef:
+  kind: Role
+  name: secrets-admin
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: krateo-authn
+  name: authn
   namespace: demo-system
   labels:
     app: authn
@@ -45,15 +72,16 @@ spec:
       labels:
         app: authn
     spec:
-      serviceAccountName: krateo-authn
+      serviceAccountName: authn
       containers:
-      - name: krateo-authn
+      - name: authn
         image: kind.local/authn:latest
         imagePullPolicy: Never
         args:
           - --debug=true
           - --kubeconfig-server-url=https://127.0.0.1:57456
-          - --store-namespace=demo-system
+          - --namespace=demo-system
+          - --jwt-sign-key=AbbraCadabbra
         ports:
         - name: http
           containerPort: 8082

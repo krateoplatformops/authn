@@ -1,5 +1,5 @@
 builds:
-- id: krateo-authn
+- id: authn
   #main: ./cmd/main.go
   env:
   - CGO_ENABLED=0

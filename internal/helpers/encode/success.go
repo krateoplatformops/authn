@@ -3,22 +3,48 @@ package encode
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/krateoplatformops/authn/internal/helpers/userinfo"
+	"github.com/krateoplatformops/plumbing/jwtutil"
 )
 
-func Success(w http.ResponseWriter, info userinfo.Info, dat []byte) error {
+type Extras struct {
+	UserInfo    userinfo.Info
+	JwtDuration time.Duration
+	JwtSingKey  string
+}
+
+func Success(w http.ResponseWriter, dat []byte, extras *Extras) (err error) {
 	out := response{
 		Data: dat,
 	}
 
-	if info != nil {
-		out.User = &user{
-			Username:    info.GetUserName(),
-			DisplayName: info.GetExtensions().Get("name"),
-			AvatarURL:   info.GetExtensions().Get("avatarUrl"),
+	if extras != nil {
+		if nfo := extras.UserInfo; nfo != nil {
+			out.User = &user{
+				Username:    nfo.GetUserName(),
+				DisplayName: nfo.GetExtensions().Get("name"),
+				AvatarURL:   nfo.GetExtensions().Get("avatarUrl"),
+			}
+			out.Groups = nfo.GetGroups()
+
+			if extras.JwtSingKey != "" {
+				if extras.JwtDuration <= 0 {
+					extras.JwtDuration = time.Hour * 8
+				}
+
+				out.AccessToken, err = jwtutil.CreateToken(jwtutil.CreateTokenOptions{
+					Username:   nfo.GetUserName(),
+					Groups:     nfo.GetGroups(),
+					Duration:   extras.JwtDuration,
+					SigningKey: extras.JwtSingKey,
+				})
+				if err != nil {
+					return err
+				}
+			}
 		}
-		out.Groups = info.GetGroups()
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -33,7 +59,8 @@ type user struct {
 }
 
 type response struct {
-	User   *user           `json:"user,omitempty"`
-	Groups []string        `json:"groups,omitempty"`
-	Data   json.RawMessage `json:"data,omitempty"`
+	AccessToken string          `json:"accessToken,omitempty"`
+	User        *user           `json:"user,omitempty"`
+	Groups      []string        `json:"groups,omitempty"`
+	Data        json.RawMessage `json:"data,omitempty"`
 }

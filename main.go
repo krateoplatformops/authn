@@ -24,14 +24,16 @@ import (
 	"github.com/krateoplatformops/authn/internal/routes/auth/oidc"
 	"github.com/krateoplatformops/authn/internal/routes/auth/strategies"
 	"github.com/krateoplatformops/authn/internal/routes/health"
-	"github.com/krateoplatformops/snowplow/plumbing/signup"
+	xcontext "github.com/krateoplatformops/plumbing/context"
+	"github.com/krateoplatformops/plumbing/jwtutil"
+	"github.com/krateoplatformops/plumbing/signup"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
-	serviceName = "auth-service"
+	serviceName = "auth"
 )
 
 var (
@@ -59,6 +61,7 @@ func main() {
 		env.String("AUTHN_NAMESPACE", ""), "namespace where to store secrets with generated config")
 	authnUsername := flag.String("authn-username",
 		env.String("AUTHN_USERNAME", "authn"), "authn username for clientconfig for restaction api calls")
+	signKey := flag.String("jwt-sign-key", env.String("JWT_SIGN_KEY", ""), "secret key used to sign JWT tokens")
 
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "Flags:")
@@ -122,20 +125,64 @@ func main() {
 		kubeconfig.Log(log),
 	)
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, restaction.RestActionContextKey("username"), *authnUsername)
-	ctx = context.WithValue(ctx, restaction.RestActionContextKey("snowplowURL"), *snowplowURL)
-
 	healthy := int32(0)
 
 	all := []routes.Route{}
-	all = append(all, health.Check(&healthy, Version, serviceName))
-	all = append(all, basic.Login(cfg, gen))
-	all = append(all, oauth.Login(ctx, cfg, gen))
-	all = append(all, ldap.Login(cfg, gen))
-	all = append(all, oidc.Login(ctx, cfg, gen))
 	all = append(all, strategies.List(cfg))
 	all = append(all, info.Info(cfg))
+	all = append(all, health.Check(&healthy, Version, serviceName))
+
+	all = append(all, basic.Login(cfg, basic.LoginOptions{
+		KubeconfigGenerator: gen,
+		JwtDuration:         *certExpiresIn,
+		JwtSingKey:          *signKey,
+	}))
+
+	all = append(all, ldap.Login(cfg, ldap.LoginOptions{
+		KubeconfigGenerator: gen,
+		JwtDuration:         *certExpiresIn,
+		JwtSingKey:          *signKey,
+	}))
+
+	accessToken, err := jwtutil.CreateToken(jwtutil.CreateTokenOptions{
+		Username:   *authnUsername,
+		Groups:     []string{"authn"},
+		SigningKey: *signKey,
+		Duration:   time.Hour * 8760, // 1 year,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msgf("cannot create jwt token for %s", *authnUsername)
+	}
+
+	all = append(all, oauth.Login(
+		xcontext.BuildContext(context.Background(),
+			xcontext.WithAccessToken(accessToken),
+			func(ctx context.Context) context.Context {
+				ctx = context.WithValue(ctx,
+					restaction.RestActionContextKey("username"), *authnUsername)
+				return context.WithValue(ctx,
+					restaction.RestActionContextKey("snowplowURL"), *snowplowURL)
+			},
+		), cfg, oauth.LoginOptions{
+			KubeconfigGenerator: gen,
+			JwtDuration:         *certExpiresIn,
+			JwtSingKey:          *signKey,
+		}))
+
+	all = append(all, oidc.Login(
+		xcontext.BuildContext(context.Background(),
+			xcontext.WithAccessToken(accessToken),
+			func(ctx context.Context) context.Context {
+				ctx = context.WithValue(ctx,
+					restaction.RestActionContextKey("username"), *authnUsername)
+				return context.WithValue(ctx,
+					restaction.RestActionContextKey("snowplowURL"), *snowplowURL)
+			},
+		), cfg, oidc.LoginOptions{
+			KubeconfigGenerator: gen,
+			JwtDuration:         *certExpiresIn,
+			JwtSingKey:          *signKey,
+		}))
 
 	handler := routes.Serve(all, log)
 	if *corsOn {
@@ -159,7 +206,7 @@ func main() {
 		IdleTimeout:  30 * time.Second,
 	}
 
-	ctx, stop := signal.NotifyContext(ctx, []os.Signal{
+	ctx, stop := signal.NotifyContext(context.Background(), []os.Signal{
 		os.Interrupt,
 		syscall.SIGINT,
 		syscall.SIGTERM,
