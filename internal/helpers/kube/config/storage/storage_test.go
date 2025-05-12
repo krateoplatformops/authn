@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
 
-	"github.com/krateoplatformops/snowplow/plumbing/e2e"
+	"github.com/krateoplatformops/plumbing/e2e"
 	"sigs.k8s.io/e2e-framework/pkg/env"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/envfuncs"

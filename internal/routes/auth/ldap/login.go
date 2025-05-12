@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/krateoplatformops/authn/internal/helpers/decode"
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
@@ -16,10 +17,18 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Login(rc *rest.Config, gen kubeconfig.Generator) routes.Route {
+type LoginOptions struct {
+	KubeconfigGenerator kubeconfig.Generator
+	JwtDuration         time.Duration
+	JwtSingKey          string
+}
+
+func Login(rc *rest.Config, opts LoginOptions) routes.Route {
 	return &loginRoute{
-		rc:  rc,
-		gen: gen,
+		rc:          rc,
+		gen:         opts.KubeconfigGenerator,
+		jwtDuration: opts.JwtDuration,
+		jwtSignKey:  opts.JwtSingKey,
 	}
 }
 
@@ -34,8 +43,10 @@ var (
 )
 
 type loginRoute struct {
-	rc  *rest.Config
-	gen kubeconfig.Generator
+	rc          *rest.Config
+	gen         kubeconfig.Generator
+	jwtDuration time.Duration
+	jwtSignKey  string
 }
 
 func (r *loginRoute) Name() string {
@@ -105,7 +116,11 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		encode.Success(wri, nfo, dat)
+		encode.Success(wri, dat, &encode.Extras{
+			UserInfo:    nfo,
+			JwtDuration: r.jwtDuration,
+			JwtSingKey:  r.jwtSignKey,
+		})
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/secrets"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/util"
-	"github.com/krateoplatformops/snowplow/plumbing/kubeutil"
+	"github.com/krateoplatformops/plumbing/kubeutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/rest"

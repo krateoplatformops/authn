@@ -9,8 +9,9 @@ import (
 
 	"github.com/krateoplatformops/authn/apis/core"
 	"github.com/krateoplatformops/authn/internal/helpers/kube/secrets"
-	snowplow "github.com/krateoplatformops/snowplow/apis/templates/v1"
-	"github.com/krateoplatformops/snowplow/plumbing/kubeutil"
+	xcontext "github.com/krateoplatformops/plumbing/context"
+	"github.com/krateoplatformops/plumbing/kubeutil"
+	templatesv1 "github.com/krateoplatformops/snowplow/apis/templates/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 )
@@ -37,7 +38,8 @@ func Resolve(ctx context.Context, rc *rest.Config, restaction *core.ObjectRef, e
 		return nil, fmt.Errorf("failed to create http request for restaction call to snowplow: %w", err)
 	}
 
-	request.Header.Add("X-Krateo-User", ctx.Value(RestActionContextKey("username")).(string))
+	jwt, _ := xcontext.AccessToken(ctx)
+	request.Header.Add("Authorization", fmt.Sprintf("Bearer: %s", jwt))
 
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -67,7 +69,7 @@ func copyRestActionWithEndpoints(ctx context.Context, rc *rest.Config, restactio
 		return nil, fmt.Errorf("could not obtain restaction object for %s %s: %w", restaction.Name, restaction.Namespace, err)
 	}
 
-	restactionObjCopy := &snowplow.RESTAction{}
+	restactionObjCopy := &templatesv1.RESTAction{}
 	restactionObjCopy.Name = restactionObj.Name + "-" + kubeutil.MakeDNS1123Compatible(email)
 	restactionObjCopy.Namespace = restactionObj.Namespace
 	restactionObjCopy.Spec = restactionObj.Spec

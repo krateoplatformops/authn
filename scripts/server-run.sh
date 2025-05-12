@@ -17,4 +17,4 @@ kubectl apply -f testdata/ns.yaml
 kubectl apply -f testdata/basic.yaml
 
 
-go run main.go -kubeconfig ${HOME}/.kube/config
+go run main.go -jwt-sign-key 'AbbraCadabbra' -kubeconfig ${HOME}/.kube/config

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/krateoplatformops/authn/internal/helpers/encode"
@@ -14,14 +15,23 @@ import (
 	"github.com/krateoplatformops/authn/internal/helpers/userinfo"
 	"github.com/krateoplatformops/authn/internal/routes"
 	"github.com/krateoplatformops/authn/internal/shortid"
-	"github.com/krateoplatformops/snowplow/plumbing/kubeutil"
+	"github.com/krateoplatformops/plumbing/kubeutil"
 	"github.com/rs/zerolog"
 	"k8s.io/client-go/rest"
 )
 
-func Login(ctx context.Context, rc *rest.Config, gen kubeconfig.Generator) routes.Route {
+type LoginOptions struct {
+	KubeconfigGenerator kubeconfig.Generator
+	JwtDuration         time.Duration
+	JwtSingKey          string
+}
+
+func Login(ctx context.Context, rc *rest.Config, opts LoginOptions) routes.Route {
 	return &loginRoute{
-		rc: rc, gen: gen, ctx: ctx,
+		rc: rc, ctx: ctx,
+		gen:         opts.KubeconfigGenerator,
+		jwtDuration: opts.JwtDuration,
+		jwtSignKey:  opts.JwtSingKey,
 	}
 }
 
@@ -33,9 +43,11 @@ const (
 var _ routes.Route = (*loginRoute)(nil)
 
 type loginRoute struct {
-	rc  *rest.Config
-	gen kubeconfig.Generator
-	ctx context.Context
+	rc          *rest.Config
+	gen         kubeconfig.Generator
+	ctx         context.Context
+	jwtDuration time.Duration
+	jwtSignKey  string
 }
 
 func (r *loginRoute) Name() string {
@@ -131,7 +143,11 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		encode.Success(wri, user, dat)
+		encode.Success(wri, dat, &encode.Extras{
+			UserInfo:    user,
+			JwtDuration: r.jwtDuration,
+			JwtSingKey:  r.jwtSignKey,
+		})
 	}
 }
 
