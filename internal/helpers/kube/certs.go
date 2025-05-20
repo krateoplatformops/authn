@@ -23,6 +23,7 @@ const (
 	certificateWaitTimeout       = 5 * time.Minute
 	certificateWaitPollInternval = 3 * time.Second
 	resourceAnnotationKey        = "krateo.user.id"
+	customSignerName             = "kubernetes.io/kube-apiserver-client"
 )
 
 func NewPrivateKey() (*rsa.PrivateKey, error) {
@@ -85,6 +86,19 @@ func CreateCertificateSigningRequests(client kubernetes.Interface, csr *certv1.C
 }
 
 func ApproveCertificateSigningRequest(client kubernetes.Interface, csr *certv1.CertificateSigningRequest) error {
+	/*
+		cfg, err := rest.InClusterConfig()
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("rest.Config.Username: ", cfg.Username)
+
+		client, err := kubernetes.NewForConfig(cfg)
+		if err != nil {
+			return err
+		}
+	*/
 	cond := certv1.CertificateSigningRequestCondition{
 		Type:           certv1.CertificateApproved,
 		Status:         corev1.ConditionTrue,
@@ -154,7 +168,7 @@ func NewCertificateSigningRequest(csr []byte, dur time.Duration, userID, usernam
 		},
 		Spec: certv1.CertificateSigningRequestSpec{
 			Request:           csr,
-			SignerName:        certv1.KubeAPIServerClientSignerName,
+			SignerName:        customSignerName,
 			Usages:            []certv1.KeyUsage{certv1.UsageClientAuth},
 			ExpirationSeconds: &durationSeconds,
 		},
