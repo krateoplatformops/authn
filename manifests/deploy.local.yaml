@@ -75,7 +75,8 @@ spec:
       serviceAccountName: authn
       containers:
       - name: authn
-        image: kind.local/authn:latest
+        #image: kind.local/authn:latest
+        image: authn:latest
         imagePullPolicy: Never
         args:
           - --debug=true
