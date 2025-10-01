@@ -217,7 +217,7 @@ func main() {
 	defer stop()
 
 	// Create authn clientconfig to call snowplow's RESTActions
-	_, err = signup.Do(context.TODO(), signup.Options{
+	_, _ = signup.Do(context.TODO(), signup.Options{
 		RestConfig:   cfg,
 		Namespace:    *storageNamespace,
 		CAData:       string(cfg.CAData),

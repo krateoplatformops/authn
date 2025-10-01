@@ -38,14 +38,17 @@ func Resolve(ctx context.Context, rc *rest.Config, restaction *core.ObjectRef, e
 		return nil, fmt.Errorf("failed to create http request for restaction call to snowplow: %w", err)
 	}
 
-	jwt, _ := xcontext.AccessToken(ctx)
-	request.Header.Add("Authorization", fmt.Sprintf("Bearer: %s", jwt))
+	jwt, ok := xcontext.AccessToken(ctx)
+	if !ok {
+		return nil, fmt.Errorf("failed to retrieve jwt token for authn")
+	}
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", jwt))
 
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send http request for restaction call to snowplow: %w", err)
 	}
-	responseRaw, err := io.ReadAll(resp.Body)
+	responseRaw, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
 	var responseStruct Response
