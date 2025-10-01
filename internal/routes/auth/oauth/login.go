@@ -99,8 +99,6 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(req.Context(), restaction.RestActionContextKey("username"), r.ctx.Value(restaction.RestActionContextKey("username")).(string))
-		ctx = context.WithValue(ctx, restaction.RestActionContextKey("snowplowURL"), r.ctx.Value(restaction.RestActionContextKey("snowplowURL")).(string))
 		userinfo := userInfo{}
 		log.Debug().Str("name", name).Msg("resolving restaction")
 		if restactionRef != nil {
@@ -110,7 +108,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 				encode.InternalError(wri, err)
 				return
 			}
-			additionalFieldstoReplace, err := restaction.Resolve(ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
+			additionalFieldstoReplace, err := restaction.Resolve(r.ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
 			if err != nil {
 				log.Err(err).Str("name", name).Msg("unable to resolve restaction")
 				encode.InternalError(wri, err)
