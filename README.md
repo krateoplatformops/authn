@@ -206,7 +206,7 @@ spec:
     endpointRef:
       name: azure-entra
       namespace: krateo-system
-    filter: .value | map(.displayName)
+    filter: .groups.value | map(.displayName)
 ```
 To obtain groups through the rest action, add `Directory.Read.All` in the `additionalScopes`.
 
