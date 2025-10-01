@@ -44,7 +44,7 @@ spec:
       name: github-api
       namespace: krateo-system
     filter: |
-      { "name": .login, "email": .email, "preferredUsername": .login, "avatarURL": .avatar_url }
+      { "name": .userInfo.login, "email": .userInfo.email, "preferredUsername": .userInfo.login, "avatarURL": .userInfo.avatar_url }
   - name: groups
     verb: POST
     headers:
@@ -55,7 +55,7 @@ spec:
     endpointRef:
       name: github-graphql-api
       namespace: krateo-system
-    filter: "[.data.organization.teams.edges[] | .node.slug]"
+    filter: "[.groups.data.organization.teams.edges[] | .node.slug]"
   filter: |
     {groups: .groups, "name": .userInfo.name, "email": .userInfo.email, "preferredUsername": .userInfo.preferredUsername, "avatarURL": .userInfo.AvatarURL }
 ---

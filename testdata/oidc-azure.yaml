@@ -7,6 +7,14 @@ metadata:
 stringData:
   clientSecret: <client-secret-provided-by-service>
 ---
+apiVersion: "v1"
+kind: Secret
+metadata:
+  name: azure-entra
+  namespace: krateo-system
+stringData:
+  server-url: https://graph.microsoft.com
+---
 apiVersion: oidc.authn.krateo.io/v1alpha1
 kind: OIDCConfig
 metadata:
@@ -49,4 +57,4 @@ spec:
     endpointRef:
       name: azure-entra
       namespace: krateo-system
-    filter: .value | map(.displayName)
+    filter: .groups.value | map(.displayName)
