@@ -110,9 +110,13 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			}
 			additionalFieldstoReplace, err := restaction.Resolve(r.ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
 			if err != nil {
-				log.Err(err).Str("name", name).Msg("unable to resolve restaction")
-				encode.InternalError(wri, err)
-				return
+				log.Err(err).Str("name", name).Msg("unable to resolve restaction, retrying with legacy resolve (copy)")
+				additionalFieldstoReplace, err = restaction.LegacyResolve(r.ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
+				if err != nil {
+					log.Err(err).Str("name", name).Msg("unable to resolve restaction, stopping")
+					encode.InternalError(wri, err)
+					return
+				}
 			}
 			log.Debug().Str("name", name).Msgf("values to replace: %s", additionalFieldstoReplace)
 			userinfo, err = updateConfig(userinfo, additionalFieldstoReplace)
