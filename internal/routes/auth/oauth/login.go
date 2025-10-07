@@ -109,7 +109,9 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 				return
 			}
 			additionalFieldstoReplace, err := restaction.Resolve(r.ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
-			if err != nil {
+			value, ok := additionalFieldstoReplace["name"]
+			_, okk := additionalFieldstoReplace["name"].(string)
+			if err != nil || !ok || !okk || value == nil {
 				log.Err(err).Str("name", name).Msg("unable to resolve restaction, retrying with legacy resolve (copy)")
 				additionalFieldstoReplace, err = restaction.LegacyResolve(r.ctx, r.rc, restactionRef, uuid.New().String(), tok.AccessToken)
 				if err != nil {
