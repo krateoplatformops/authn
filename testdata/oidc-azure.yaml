@@ -53,6 +53,7 @@ spec:
     verb: GET
     headers:
     - 'Accept: application/json'
+    - "${ \"Authorization: Bearer \" + .token }"
     path: "v1.0/me/memberOf?$select=displayName"
     endpointRef:
       name: azure-entra
