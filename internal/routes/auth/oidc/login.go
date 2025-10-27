@@ -94,10 +94,16 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		log.Debug().Str("name", name).Msg("resolving restaction")
 		if cfg.RESTActionRef != nil {
 			additionalFieldstoReplace, err := restaction.Resolve(r.ctx, r.rc, cfg.RESTActionRef, idToken.email, idToken.bearerToken)
-			if err != nil {
-				log.Err(err).Str("name", name).Msg("unable to resolve restaction")
-				encode.InternalError(wri, err)
-				return
+			value, ok := additionalFieldstoReplace["name"]
+			_, okk := additionalFieldstoReplace["name"].(string)
+			if err != nil || !ok || !okk || value == nil {
+				log.Err(err).Str("name", name).Msg("unable to resolve restaction, retrying with legacy resolve (copy)")
+				additionalFieldstoReplace, err = restaction.LegacyResolve(r.ctx, r.rc, cfg.RESTActionRef, idToken.email, idToken.bearerToken)
+				if err != nil {
+					log.Err(err).Str("name", name).Msg("unable to resolve restaction, stopping")
+					encode.InternalError(wri, err)
+					return
+				}
 			}
 			log.Debug().Str("name", name).Msg("updating oidc idtoken")
 			log.Debug().Str("name", name).Msgf("old idToken - name: %s - preferredUsername: %s - email: %s - groups: %s - avatarURL: %s", idToken.name, idToken.preferredUsername, idToken.email, idToken.groups, idToken.avatarURL)

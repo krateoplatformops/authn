@@ -51,11 +51,48 @@ spec:
   api:
   - name: groups
     verb: GET
+    continueOnError: false
+    errorKey: groupsError
     headers:
     - 'Accept: application/json'
     - "${ \"Authorization: Bearer \" + .token }"
-    path: "v1.0/me/memberOf?$select=displayName"
+    path: ${ .next // "v1.0/me/memberOf?$select=displayName&" }
     endpointRef:
       name: azure-entra
       namespace: krateo-system
-    filter: .groups.value | map(.displayName)
+    filter: |
+      .groups | if has("@odata.nextLink") then
+      {
+        res: (.value | map(.displayName)),
+        next: (."@odata.nextLink" | sub("https://graph.microsoft.com"; ""))
+      }
+      else
+      {
+        res: (.value | map(.displayName))
+      }
+      end
+  - name: recursive
+    verb: GET
+    exportJwt: true
+    continueOnError: false
+    errorKey: recursiveError
+    dependsOn:
+      name: groups
+      iterator: |
+        .token as $token | .groups | if has("next") then [{next: .next, token: $token}] else [] end
+    headers:
+    - 'Accept: application/json'
+    path: |
+      ${ "/call?apiVersion=templates.krateo.io/v1&resource=restactions&name=test-rest-action&namespace=krateo-system&extras=" + ({token: .token, next: .next } | tostring | @uri ) }
+    endpointRef:
+      name: snowplow-endpoint
+      namespace: krateo-system
+    filter: .recursive.status
+  filter: | 
+    .groups.res as $groups | 
+    .recursive | 
+    if type == "object" then
+      .groups += $groups
+    elif type == "null" then 
+      {"groups": $groups}
+    end
