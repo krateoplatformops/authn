@@ -208,7 +208,7 @@ spec:
       namespace: krateo-system
     filter: .groups.value | map(.displayName)
 ```
-To obtain groups through the rest action, add `Directory.Read.All` in the `additionalScopes`.
+To obtain groups through the rest action, add `Directory.Read.All` in the `additionalScopes`. There is a more complex example for the Microsoft Entra API that also uses pagination in the testdata folder (requires Authn >= 0.22.0).
 
 On AuthN:
  - To obtain the user avatar/profile image include `User.Read` in the `additionalScopes` field of the OIDCConfiguration custom resource;

@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-example-secret
+  namespace: demo-system
+stringData:
+  clientSecret: <client-secret-provided-by-service>
+---
+apiVersion: "v1"
+kind: Secret
+metadata:
+  name: azure-entra
+  namespace: krateo-system
+stringData:
+  server-url: https://graph.microsoft.com
+---
+apiVersion: oidc.authn.krateo.io/v1alpha1
+kind: OIDCConfig
+metadata:
+  name: oidc-example
+  namespace: demo-system
+spec:
+  discoveryURL: https://<identity-provider-url>/.well-known/openid-configuration
+  # Use these three fields if you do not have a discovery endpoint
+  # authorizationURL: authorization endpoint
+  # tokenURL: token endpoint
+  # userInfoURL: userinfo endpoint
+  redirectURI: http://localhost:8080/auth?kind=oidc # While any redirect URI can be used, the Krateo frontend requires /auth?kind=oidc
+  clientID: <client-id-provided-by-service>
+  clientSecret:
+    name: oidc-example-secret
+    namespace: demo-system
+    key: clientSecret
+  additionalScopes: # e.g., "User.Read Directory.Read.All" for Azure
+  restActionRef: # optional
+    name: test-rest-action
+    namespace: krateo-system
+  graphics:
+    icon: "fa-brands fa-windows"
+    displayName: "Login with Azure"
+    backgroundColor: "#4444ff"
+    textColor: "#ffffff"
+---
+apiVersion: templates.krateo.io/v1
+kind: RESTAction
+metadata:
+  name: test-rest-action
+  namespace: krateo-system
+spec:
+  api:
+  - name: groups
+    verb: GET
+    continueOnError: false
+    errorKey: groupsError
+    headers:
+    - 'Accept: application/json'
+    - "${ \"Authorization: Bearer \" + .token }"
+    path: ${ .next // "v1.0/me/memberOf?$select=displayName&" }
+    endpointRef:
+      name: azure-entra
+      namespace: krateo-system
+    filter: |
+      .groups | if has("@odata.nextLink") then
+      {
+        res: (.value | map(.displayName)),
+        next: (."@odata.nextLink" | sub("https://graph.microsoft.com"; ""))
+      }
+      else
+      {
+        res: (.value | map(.displayName))
+      }
+      end
+  - name: recursive
+    verb: GET
+    exportJwt: true
+    continueOnError: false
+    errorKey: recursiveError
+    dependsOn:
+      name: groups
+      iterator: |
+        .token as $token | .groups | if has("next") then [{next: .next, token: $token}] else [] end
+    headers:
+    - 'Accept: application/json'
+    path: |
+      ${ "/call?apiVersion=templates.krateo.io/v1&resource=restactions&name=test-rest-action&namespace=krateo-system&extras=" + ({token: .token, next: .next } | tostring | @uri ) }
+    endpointRef:
+      name: snowplow-endpoint
+      namespace: krateo-system
+    filter: .recursive.status
+  filter: | 
+    .groups.res as $groups | 
+    .recursive | 
+    if type == "object" then
+      .groups += $groups
+    elif type == "null" then 
+      {"groups": $groups}
+    end
