@@ -258,7 +258,14 @@ The `RESTActionRef` field in the OAuth2 and OIDC configs is mandatory and option
 
 In the case of OAuth2, these fields are needed to compile the certificate and the ones marked as such are mandatory. They have to be included as top level fields in the RESTAction response. See the testdata folder for a Github example. In the OIDC case, these fields are all optional, and if included will overwrite the information obtained from the id token and the userinfo endpoint.
 
-The authentication for the endpoints of the RESTAction is automatically set to bearer token, using the token obtained from the OAuth2/OIDC authentication. If the endpoint already specifies an authentication method, then it is not overwritten and it will be used for the API calls instead of the bearer token.
+The authentication for the endpoints of the RESTAction is automatically set to bearer token, using the token obtained from the OAuth2/OIDC authentication. This token is passed to the RESTActio as a parameter, and can be used in the `Authorization` header as follows:
+```yaml
+    headers:
+    - "${ \"Authorization: Bearer \" + .token }"
+```
+See [oidc-azure-pagination](./testdata/oidc-azure-pagination.yaml), [oidc-azure](./testdata/oidc-azure.yaml) and [oauth](./testdata/oauth.yaml) for more examples.
+
+If the RESTAction does not accept a token parameter, then it will temporarily set the token in the respective endpoint.
 
 ## Graphics Configuration
 The OAuth2 and OIDC authentication methods also support a `graphics` object that allows to configure how the button for the redirect to the authentication provider portal is visualized in the frontend login screen.
