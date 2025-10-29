@@ -55,8 +55,16 @@ func main() {
 		env.String("AUTHN_KUBECONFIG_CLUSTER_NAME", "krateo"), "cluster name for generated kubeconfig")
 	kubernetesURL := flag.String("kubeconfig-server-url",
 		env.String("AUTHN_KUBECONFIG_SERVER_URL", ""), "kubernetes api server url for generated kubeconfig")
-	snowplowURL := flag.String("snowplow-url",
-		env.String("URL_SNOWPLOW", "http://snowplow.krateo-system.svc.cluster.local:8081"), "snowplow url for restaction api calls")
+	snowplowHOST := flag.String("snowplow-host",
+		env.String("SNOWPLOW_SERVICE_HOST", ""), "snowplow host for restaction api calls")
+	snowplowPORT := flag.String("snowplow-post",
+		env.String("SNOWPLOW_SERVICE_PORT", "8081"), "snowplow port for restaction api calls")
+	var snowplowURL *string
+	temp := "http://" + *snowplowHOST + ":" + *snowplowPORT
+	snowplowURL = &temp
+	if *snowplowURL == "http://:8081" {
+		snowplowURL = flag.String("snowplow-url", env.String("URL_SNOWPLOW", "http://snowplow.krateo-system.svc.cluster.local:8081"), "snowplow url for restaction api calls")
+	}
 	storageNamespace := flag.String("namespace",
 		env.String("AUTHN_NAMESPACE", ""), "namespace where to store secrets with generated config")
 	authnUsername := flag.String("authn-username",
