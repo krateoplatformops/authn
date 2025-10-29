@@ -114,6 +114,9 @@ func main() {
 		evt.Msg("configuration and env vars info")
 	}
 
+	log.Debug().Msgf("Snowplow URL from Service ENV: %s", temp)
+	log.Debug().Msgf("Snowplow URL computed/from parameter: %s", *snowplowURL)
+
 	// Kubernetes configuration
 	var cfg *rest.Config
 	var err error
