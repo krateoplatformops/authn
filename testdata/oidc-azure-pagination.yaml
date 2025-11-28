@@ -56,19 +56,19 @@ spec:
     headers:
     - 'Accept: application/json'
     - "${ \"Authorization: Bearer \" + .token }"
-    path: ${ .next // "v1.0/me/memberOf?$select=displayName&" }
+    path: ${ .next // "v1.0/me/memberOf?$select=id" }
     endpointRef:
       name: azure-entra
       namespace: krateo-system
     filter: |
       .groups | if has("@odata.nextLink") then
       {
-        res: (.value | map(.displayName)),
+        res: (.value | map(.id)),
         next: (."@odata.nextLink" | sub("https://graph.microsoft.com"; ""))
       }
       else
       {
-        res: (.value | map(.displayName))
+        res: (.value | map(.id))
       }
       end
   - name: recursive
@@ -82,7 +82,7 @@ spec:
         (.counter // 0) as $counter | .token as $token | if $counter < 10 then ( .groups | if has("next") then [{next: .next, token: $token, counter: $counter}] else [] end ) else [] end
     headers:
     - 'Accept: application/json'
-    path: |
+    path: | # set your restaction name and namespace in the URI to match 
       ${ "/call?apiVersion=templates.krateo.io/v1&resource=restactions&name=test-rest-action&namespace=krateo-system&extras=" + ({token: .token, next: .next, counter: (.counter+1)} | tostring | @uri ) }
     endpointRef:
       name: snowplow-endpoint
