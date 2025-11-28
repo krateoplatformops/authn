@@ -94,9 +94,11 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		log.Debug().Str("name", name).Msg("resolving restaction")
 		if cfg.RESTActionRef != nil {
 			additionalFieldstoReplace, err := restaction.Resolve(r.ctx, r.rc, cfg.RESTActionRef, idToken.email, idToken.bearerToken)
-			value, ok := additionalFieldstoReplace["name"]
-			_, okk := additionalFieldstoReplace["name"].(string)
-			if err != nil || !ok || !okk || value == nil {
+			ok, errr := checkKeys(additionalFieldstoReplace)
+			if err != nil || !ok || errr != nil {
+				if errr != nil {
+					log.Err(err).Str("name", name).Msgf("restaction parsing has found the following error: %v", errr)
+				}
 				log.Err(err).Str("name", name).Msg("unable to resolve restaction, retrying with legacy resolve (copy)")
 				additionalFieldstoReplace, err = restaction.LegacyResolve(r.ctx, r.rc, cfg.RESTActionRef, idToken.email, idToken.bearerToken)
 				if err != nil {
