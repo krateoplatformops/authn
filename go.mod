@@ -21,7 +21,10 @@ require (
 	sigs.k8s.io/e2e-framework v0.6.0
 )
 
-require github.com/krateoplatformops/snowplow v0.0.0-20250508092448-4cff77fa45a5
+require (
+	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/krateoplatformops/snowplow v0.0.0-20250508092448-4cff77fa45a5
+)
 
 require (
 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
@@ -39,7 +42,6 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gobuffalo/flect v1.0.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

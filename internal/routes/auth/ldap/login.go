@@ -109,7 +109,7 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 			return
 		}
 
-		dat, err := r.gen.Generate(nfo)
+		dat, notAfter, err := r.gen.Generate(nfo)
 		if err != nil {
 			log.Err(err).Msg("kubeconfig creation failure")
 			encode.InternalError(wri, err)
@@ -117,9 +117,10 @@ func (r *loginRoute) Handler() http.HandlerFunc {
 		}
 
 		encode.Success(wri, dat, &encode.Extras{
-			UserInfo:    nfo,
-			JwtDuration: r.jwtDuration,
-			JwtSingKey:  r.jwtSignKey,
+			UserInfo:     nfo,
+			JwtDuration:  r.jwtDuration,
+			JwtSingKey:   r.jwtSignKey,
+			CertNotAfter: notAfter,
 		})
 	}
 }

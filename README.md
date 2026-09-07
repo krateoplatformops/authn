@@ -267,6 +267,48 @@ See [oidc-azure-pagination](./testdata/oidc-azure-pagination.yaml), [oidc-azure]
 
 If the RESTAction does not accept a token parameter, then it will temporarily set the token in the respective endpoint.
 
+## Client certificate renewal
+authn mints x509 client certificates through the Kubernetes CSR API (signer `kubernetes.io/kube-apiserver-client`) and stores them in `<name>-clientconfig` Secrets. There are two kinds of identity and they are kept alive differently.
+
+### The requested duration is not the granted duration
+A signer grants `min(requested expirationSeconds, cluster-signing-duration, signer CA remaining life)`. Vanilla Kubernetes defaults `--cluster-signing-duration` to `8760h`, so the year authn asks for usually survives, which is why this stays invisible until you deploy elsewhere. OpenShift pins the signing duration to 720h and rotates the CSR signer CA every 30 days, so a certificate requested for a year comes back valid for at most 30 days, and for a single day when a rotation is imminent.
+
+authn therefore reads `NotAfter` off the issued certificate instead of assuming the request held, and annotates every stored Secret with the window that was actually granted:
+```sh
+$ kubectl -n krateo-system get secret authn-clientconfig -o jsonpath='{.metadata.annotations}'
+{"authn.krateo.io/certificate-not-before":"2026-09-04T10:00:00Z","authn.krateo.io/certificate-not-after":"2026-10-04T10:00:00Z"}
+```
+A `warn` is logged at issue time whenever the granted window is under 90% of the requested one, which is the only signal that a signer is capping you. Nothing reads these annotations back: the renewal loop decides off the stored certificate itself, and they exist so that an operator can answer "when does this credential really die" across a whole namespace without decoding anything, e.g. `kubectl get secret -o custom-columns=NAME:.metadata.name,EXPIRES:'.metadata.annotations.authn\.krateo\.io/certificate-not-after'`.
+
+That clamp is what makes `NotAfter` a sufficient signal rather than a hopeful one, and it is worth knowing it is real: Kubernetes' signer sets the issued `NotAfter` to `min(now + ttl, signer CA NotAfter)` (`pkg/controller/certificates/authority/policies.go`, `if !tmpl.NotAfter.Before(signerNotAfter) { tmpl.NotAfter = signerNotAfter }`) and refuses to sign at all once the CA itself has expired, so a certificate can never outlive the CA that signed it. The signer hot-reloads its CA from disk, so signings after a rotation use the new CA. OpenShift's rotation is additive on the trust side: library-go's `manageCABundleConfigMap` prepends the new signer to the CA bundle and prunes only certificates that have genuinely expired, so a certificate issued by a since-rotated CA stays trusted right up to its own `NotAfter`. Renewing at a fraction of the granted window is therefore always in time. Note that a CA being *rotated* in five days is not the same as it *expiring* in five days: if the old CA cert is still valid for another 25 days you are granted up to those 25 days, and that is correct, because the rotated-out CA remains in the bundle until it expires.
+
+The one case this cannot see is a signer CA regenerated out of band with its trust bundle rebuilt from scratch (disaster recovery, a manual signer wipe). Previously issued certificates then stop being accepted while their `NotAfter` is still in the future, which surfaces as `x509: certificate signed by unknown authority` rather than as an expiry. authn cannot detect it, because snowplow rather than authn is what presents the certificate; recovery is a pod restart or `kubectl delete secret authn-clientconfig`, which the loop re-issues on its next check.
+
+### `authn-clientconfig` is renewed in the background
+This is authn's own identity, the one snowplow presents when it runs RESTActions on authn's behalf. Nothing else ever re-issues it: unlike a user certificate there is no login to rewrite it, so it used to be created once at startup and then rot in place, and every RESTAction call failed with `x509: certificate has expired or is not yet valid` until the pod was restarted.
+
+A background loop now issues it at startup and re-issues it once it passes `AUTHN_CRT_RENEWAL_THRESHOLD` of its granted lifetime. Because the threshold is a fraction of what was granted rather than of what was asked for, one setting covers both a full year (re-issued after about 8 months) and a certificate a rotating signer CA cut to an hour (re-issued after about 40 minutes). The certificate is read exactly once per issuance: the signing call returns it, and the clamp above makes its `NotAfter` deterministic, so there is nothing to re-read until renewal falls due. The loop then simply sleeps that long — a year-long certificate is one sleep of about eight months, not a poll. The knobs, both settable under `env` in the chart values:
+- `AUTHN_SERVICE_CRT_EXPIRES_IN` (`--service-cert-expires`, default `8760h`): duration requested for authn's own certificate.
+- `AUTHN_CRT_RENEWAL_THRESHOLD` (`--cert-renewal-threshold`, default `0.66`): fraction of the granted lifetime after which it is re-issued. This is the whole renewal policy; it must be between 0 and 1 exclusive, and an out-of-range value falls back to the default.
+- `AUTHN_CRT_RENEWAL_ENABLED` (`--cert-renewal`, default `true`): set `false` to restore the old behaviour, where the certificate expires in place until the pod restarts.
+
+Failures retry after a minute, and a failed read never triggers a re-issue: an apiserver hiccup is not evidence the credential is gone. Because nothing polls, a Secret deleted or replaced out of band is not noticed until the next scheduled re-issue; deleting it is still the way to force a fresh certificate, but it takes a pod restart to act on it immediately. No new RBAC is needed: the validity annotations are written with the `get` and `update` on `secrets` authn already holds. The loop does assume a single writer, since the CSR object is named after the username and two replicas would race on the CSR named `authn`.
+
+### `<user>-clientconfig` is clamped, not renewed
+Per-user certificates are deliberately not on the renewal loop. Instead the login JWT is now issued for `min(AUTHN_KUBECONFIG_CRT_EXPIRES_IN, time until the certificate's real NotAfter)`.
+
+That closes the actual bug. The JWT lifetime used to come from the requested duration, so a truncated certificate left the user logged in while every user-scoped call failed with an x509 error, and with no refresh endpoint the only recovery was waiting out the JWT. With the clamp the certificate outlives every token issued against it by construction, and a user certificate is re-minted on every login, so there is no window left for a background loop to rescue.
+
+Renewing them would also be actively worse: it would rewrite the Secret but not the kubeconfig copy the user is holding, and it would keep minting valid cluster credentials for identities long since deprovisioned upstream, which authn cannot check because it learns who someone is at login and holds no session state.
+
+### Verifying it
+Certificate handling differs per distribution, so it has to be measured rather than reasoned about. [`scripts/verify-cert-renewal.sh`](./scripts/verify-cert-renewal.sh) reports the granted `NotAfter`, checks that renewal fires before expiry, and proves the renewed certificate still authenticates against the apiserver. Run it on each flavour you support (kind, minikube, k3s/k3d, EKS, AKS, GKE, OpenShift) and record the row it prints.
+```sh
+$ scripts/verify-cert-renewal.sh -n krateo-system              # report only
+$ scripts/verify-cert-renewal.sh -n krateo-system --wait       # force a renewal now
+$ scripts/verify-cert-renewal.sh -n krateo-system --short 15m  # watch a full cycle in ~10 minutes
+```
+
 ## Graphics Configuration
 The OAuth2 and OIDC authentication methods also support a `graphics` object that allows to configure how the button for the redirect to the authentication provider portal is visualized in the frontend login screen.
 ```yaml
